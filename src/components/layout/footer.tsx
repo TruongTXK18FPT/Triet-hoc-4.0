@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { PhiIcon } from '../icons/phi-icon';
 import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import Image from 'next/image';
 
 const socialLinks = [
   { Icon: Facebook, href: '#', name: 'Facebook' },
@@ -44,8 +44,8 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="mb-6 md:mb-0 lg:col-span-1">
-             <Link href="/" className="flex items-center gap-2 mb-4">
-              <PhiIcon className="w-8 h-8 text-primary-foreground" />
+             <Link href="/" className="flex items-center gap-3 mb-4">
+              <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={40} height={40} className="brightness-0 invert"/>
               <span className="font-headline text-2xl font-bold">Triết Học 4.0</span>
             </Link>
             <p className="text-sm text-primary-foreground/70">Nền tảng học tập triết học Mác – Lênin bằng AI.</p>

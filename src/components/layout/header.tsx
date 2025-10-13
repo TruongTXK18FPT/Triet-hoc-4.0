@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
-import { PhiIcon } from '../icons/phi-icon';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Image from 'next/image';
 
 
 const navLinks = [
@@ -42,7 +42,7 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <PhiIcon className={cn("w-7 h-7", scrolled ? "text-primary" : "text-white")} />
+            <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={40} height={40} className={cn(!scrolled && "brightness-0 invert")}/>
             <span className={cn(
                 "font-headline text-xl font-bold",
                 scrolled ? "text-primary" : "text-white"
@@ -93,8 +93,8 @@ export function Header() {
               <SheetContent side="right" className="w-[80%] bg-background">
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-center border-b pb-4">
-                     <Link href="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-                        <PhiIcon className="w-7 h-7 text-primary" />
+                     <Link href="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
+                        <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={32} height={32} />
                         <span className="font-headline text-xl font-bold text-primary">Triết Học 4.0</span>
                     </Link>
                     <Button variant="ghost" size="icon" onClick={() => setMenuOpen(false)}>
