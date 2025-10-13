@@ -35,9 +35,8 @@ const vuaTrietAIFlow = ai.defineFlow(
   async (input) => {
     const { history } = input;
 
-    const llm = ai.model('googleai/gemini-2.5-flash');
-
-    const response = await llm.generate({
+    const response = await ai.generate({
+      model: 'googleai/gemini-2.5-flash',
       system: `You are "Vua Triết AI", a master of economics, philosophy, and scientific socialism based on Marxism-Leninism. Your name means "King of Philosophy AI".
       You must answer everything in Vietnamese.
       Your tone should be profound, knowledgeable, but also approachable and easy to understand for students.
