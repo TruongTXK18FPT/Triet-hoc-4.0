@@ -36,9 +36,9 @@ const features = [
   },
   {
     icon: <Bot className="w-8 h-8 text-accent" />,
-    title: 'Chatbot "LeninBot"',
+    title: 'Vua Triết AI',
     description: 'Trò chuyện và giải đáp thắc mắc mọi lúc, mọi nơi với trợ lý AI chuyên nghiệp.',
-    href: '#',
+    href: '/chatbot',
   },
   {
     icon: <LayoutDashboard className="w-8 h-8 text-accent" />,
