@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Redo } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 // Sample quiz data. This would typically be fetched from a database or CMS.
 const sampleQuiz = {
@@ -23,7 +24,7 @@ const sampleQuiz = {
         { id: 'o1', text: 'Nguyên lý về mối liên hệ phổ biến và nguyên lý về sự phát triển.' },
         { id: 'o2', text: 'Nguyên lý về vật chất và ý thức.' },
         { id: 'o3', text: 'Nguyên lý về tồn tại xã hội và ý thức xã hội.' },
-        { id 'o4', text: 'Nguyên lý về đấu tranh giai cấp và cách mạng xã hội.' },
+        { id: 'o4', text: 'Nguyên lý về đấu tranh giai cấp và cách mạng xã hội.' },
       ],
       correctOptionId: 'o1',
     },
