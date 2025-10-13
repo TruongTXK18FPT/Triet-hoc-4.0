@@ -37,11 +37,7 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={40} height={40} className={cn(!scrolled && "brightness-0 invert")}/>
-            <span className={cn(
-                "font-headline text-xl font-bold",
-                scrolled ? "text-primary" : "text-white"
-            )}>Triết Học 4.0</span>
+            <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={160} height={40} className={cn("object-contain", !scrolled && "brightness-0 invert")}/>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -73,8 +69,7 @@ export function Header() {
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-center border-b pb-4">
                      <Link href="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-                        <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={32} height={32} />
-                        <span className="font-headline text-xl font-bold text-primary">Triết Học 4.0</span>
+                        <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={120} height={32} className="object-contain" />
                     </Link>
                     <Button variant="ghost" size="icon" onClick={() => setMenuOpen(false)}>
                         <X/>

@@ -45,8 +45,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="mb-6 md:mb-0 lg:col-span-1">
              <Link href="/" className="flex items-center gap-3 mb-4">
-              <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={40} height={40} className="brightness-0 invert"/>
-              <span className="font-headline text-2xl font-bold">Triết Học 4.0</span>
+              <Image src="/logo.png" alt="Triết Học 4.0 Logo" width={160} height={40} className="brightness-0 invert object-contain"/>
             </Link>
             <p className="text-sm text-primary-foreground/70">Nền tảng học tập triết học Mác – Lênin bằng AI.</p>
           </div>
