@@ -19,60 +19,26 @@ import {
 } from '@/components/ui/dialog';
 import { explainConcept } from '@/ai/flows/explain-philosophical-concepts';
 import type { ExplainConceptOutput } from '@/ai/flows/explain-philosophical-concepts';
+import { timelineEvents, type TimelineEvent } from '@/lib/timeline-events';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
-
-type TimelineEvent = {
-  year: string;
-  title: string;
-  description: string;
-};
-
-const timelineEvents: TimelineEvent[] = [
-  {
-    year: '1848',
-    title: 'Tuyên ngôn của Đảng Cộng sản',
-    description: 'Marx và Engels xuất bản tác phẩm, đặt nền móng cho chủ nghĩa cộng sản.',
-  },
-  {
-    year: '1867',
-    title: 'Tư bản, Quyển I',
-    description: 'Marx xuất bản công trình phân tích sâu sắc về phương thức sản xuất tư bản chủ nghĩa.',
-  },
-  {
-    year: '1902',
-    title: 'Làm gì?',
-    description: 'Lenin xuất bản tác phẩm về vai trò của đảng tiên phong trong cách mạng vô sản.',
-  },
-  {
-    year: '1916',
-    title: 'Chủ nghĩa đế quốc, giai đoạn tột cùng của chủ nghĩa tư bản',
-    description: 'Lenin phân tích sự phát triển của chủ nghĩa tư bản thành chủ nghĩa đế quốc.',
-  },
-  {
-    year: '1917',
-    title: 'Cách mạng Tháng Mười Nga',
-    description: 'Cuộc cách mạng vô sản đầu tiên trên thế giới thành công, do Đảng Bolshevik lãnh đạo.',
-  },
-  {
-    year: '1920',
-    title: 'Bệnh ấu trĩ "tả" của chủ nghĩa cộng sản',
-    description: 'Lenin phê phán các khuynh hướng tả khuynh trong phong trào cộng sản quốc tế.',
-  },
-];
+import Link from 'next/link';
 
 export function TimelinePreview() {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [explanation, setExplanation] = useState<ExplainConceptOutput | null>(null);
   const [isPending, startTransition] = useTransition();
+  
+  // Get first 6 events for preview
+  const previewEvents = timelineEvents.slice(0, 6);
 
   const handleExplainClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
     setDialogOpen(true);
     setExplanation(null);
     startTransition(async () => {
-      const result = await explainConcept({ concept: event.title });
+      const result = await explainConcept({ concept: `${event.title} (${event.year})` });
       setExplanation(result);
     });
   };
@@ -89,7 +55,7 @@ export function TimelinePreview() {
 
         <Carousel className="w-full max-w-6xl mx-auto">
           <CarouselContent className="-ml-4">
-            {timelineEvents.map((event) => (
+            {previewEvents.map((event) => (
               <CarouselItem key={event.title} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
                   <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md bg-card/70 backdrop-blur-sm border-coffee-dark/20" style={{'--tw-shadow-color': 'hsl(var(--primary) / 0.1)'} as React.CSSProperties}>
@@ -113,6 +79,11 @@ export function TimelinePreview() {
           <CarouselPrevious className="hidden md:flex" />
           <CarouselNext className="hidden md:flex" />
         </Carousel>
+        <div className="text-center mt-12">
+            <Button asChild size="lg" variant="outline">
+                <Link href="/timeline">Xem Toàn Bộ Dòng Thời Gian</Link>
+            </Button>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
@@ -128,7 +99,7 @@ export function TimelinePreview() {
                 <p className="ml-4 text-foreground/70">AI đang tư duy...</p>
               </div>
             ) : (
-              <div className="text-foreground/90 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: explanation?.explanation ?? ''}}/>
+              <div className="text-foreground/90 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: explanation?.explanation.replaceAll('\n', '<br />') ?? ''}}/>
             )}
           </ScrollArea>
         </DialogContent>

@@ -13,7 +13,7 @@ const navLinks = [
   { name: 'Roadmap AI', href: '/roadmap-ai' },
   { name: 'Quiz', href: '/quiz' },
   { name: 'Blog', href: '/blog' },
-  { name: 'Timeline', href: '#timeline' },
+  { name: 'Timeline', href: '/timeline' },
   { name: 'Chatbot', href: '/chatbot' },
 ];
 
