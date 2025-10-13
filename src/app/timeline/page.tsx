@@ -1,12 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { timelineEvents, type TimelineEvent } from '@/lib/timeline-events';
-import { ScrollText } from 'lucide-react';
+import { ScrollText, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { explainConcept } from '@/ai/flows/explain-philosophical-concepts';
+import type { ExplainConceptOutput } from '@/ai/flows/explain-philosophical-concepts';
 
 const years = timelineEvents.map(e => parseInt(e.year));
 const minYear = Math.min(...years);
@@ -14,6 +25,10 @@ const maxYear = Math.max(...years);
 
 export default function TimelinePage() {
   const [range, setRange] = useState<[number, number]>([minYear, maxYear]);
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const [explanation, setExplanation] = useState<ExplainConceptOutput | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const filteredEvents = timelineEvents.filter(event => {
     const eventYear = parseInt(event.year);
@@ -22,6 +37,16 @@ export default function TimelinePage() {
 
   const handleRangeChange = (newRange: [number, number]) => {
     setRange(newRange);
+  };
+
+  const handleExplainClick = (event: TimelineEvent) => {
+    setSelectedEvent(event);
+    setDialogOpen(true);
+    setExplanation(null);
+    startTransition(async () => {
+      const result = await explainConcept({ concept: `${event.title} (${event.year})` });
+      setExplanation(result);
+    });
   };
 
   return (
@@ -75,6 +100,11 @@ export default function TimelinePage() {
                   <CardContent>
                     <p className="text-foreground/70">{event.description}</p>
                   </CardContent>
+                  <CardFooter>
+                     <Button variant="link" className="text-accent font-semibold p-0" onClick={() => handleExplainClick(event)}>
+                        AI Explain &rarr;
+                      </Button>
+                  </CardFooter>
                 </Card>
               </div>
             ))}
@@ -87,6 +117,24 @@ export default function TimelinePage() {
         </div>
       </main>
       <Footer />
+       <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="font-headline text-2xl text-primary">{selectedEvent?.title}</DialogTitle>
+            <DialogDescription>{selectedEvent?.year}</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="prose prose-sm max-w-none pr-6 -mr-6">
+            {isPending ? (
+              <div className="flex items-center justify-center h-48">
+                <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                <p className="ml-4 text-foreground/70">AI đang tư duy...</p>
+              </div>
+            ) : (
+              <div className="text-foreground/90 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: explanation?.explanation.replaceAll('\n', '<br />') ?? ''}}/>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
