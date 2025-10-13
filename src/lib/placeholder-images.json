@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-background",
+      "description": "Abstract glowing brain and circuits",
+      "imageUrl": "https://picsum.photos/seed/hero/1920/1080",
+      "imageHint": "abstract glowing brain"
+    },
+    {
+      "id": "student-1",
+      "description": "Portrait of a student",
+      "imageUrl": "https://picsum.photos/seed/student1/100/100",
+      "imageHint": "student portrait"
+    },
+    {
+      "id": "student-2",
+      "description": "Portrait of a student",
+      "imageUrl": "https://picsum.photos/seed/student2/100/100",
+      "imageHint": "student portrait"
+    },
+    {
+      "id": "student-3",
+      "description": "Portrait of a student",
+      "imageUrl": "https://picsum.photos/seed/student3/100/100",
+      "imageHint": "student portrait"
+    }
+  ]
 }
