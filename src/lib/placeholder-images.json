@@ -23,6 +23,24 @@
       "description": "Portrait of a student",
       "imageUrl": "https://picsum.photos/seed/student3/100/100",
       "imageHint": "student portrait"
+    },
+    {
+      "id": "blog-post-1",
+      "description": "A statue of Karl Marx",
+      "imageUrl": "https://picsum.photos/seed/blog1/1200/800",
+      "imageHint": "Karl Marx statue"
+    },
+    {
+      "id": "blog-post-2",
+      "description": "An old book about philosophy",
+      "imageUrl": "https://picsum.photos/seed/blog2/1200/800",
+      "imageHint": "philosophy book"
+    },
+    {
+      "id": "blog-post-3",
+      "description": "People in a protest",
+      "imageUrl": "https://picsum.photos/seed/blog3/1200/800",
+      "imageHint": "social movement"
     }
   ]
 }

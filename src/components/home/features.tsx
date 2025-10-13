@@ -26,7 +26,7 @@ const features = [
     icon: <FileText className="w-8 h-8 text-accent" />,
     title: 'Blog',
     description: 'Khám phá các bài viết chuyên sâu, phân tích đa chiều về triết học Mác – Lênin.',
-    href: '#',
+    href: '/blog',
   },
   {
     icon: <ScrollText className="w-8 h-8 text-accent" />,

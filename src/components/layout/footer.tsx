@@ -24,7 +24,7 @@ const footerSections = [
         { name: 'Roadmap AI', href: '/roadmap-ai' },
         { name: 'Làm Quiz', href: '/quiz' },
         { name: 'Tạo Quiz', href: '/quiz/create' },
-        { name: 'Blog', href: '#' },
+        { name: 'Blog', href: '/blog' },
         { name: 'Timeline', href: '/timeline' },
       ],
     },

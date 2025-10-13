@@ -14,6 +14,7 @@ const navLinks = [
   { name: 'Roadmap AI', href: '/roadmap-ai' },
   { name: 'Timeline', href: '/timeline' },
   { name: 'Quiz', href: '/quiz' },
+  { name: 'Blog', href: '/blog' },
   { name: 'Chatbot', href: '/chatbot' },
 ];
 
@@ -46,9 +47,6 @@ export function Header() {
                 <Link href={link.href}>{link.name}</Link>
               </Button>
             ))}
-             <Button variant="ghost" asChild className={cn(scrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
-                <Link href="#">Blog</Link>
-              </Button>
           </nav>
           
           <div className="hidden md:flex items-center gap-2">
@@ -88,7 +86,6 @@ export function Header() {
                       </Link>
                     ))}
                      <Link href="/quiz/create" className="text-lg font-medium text-foreground/80 hover:text-primary" onClick={() => setMenuOpen(false)}>Tạo Quiz</Link>
-                     <Link href="#" className="text-lg font-medium text-foreground/80 hover:text-primary" onClick={() => setMenuOpen(false)}>Blog</Link>
                   </nav>
                   <Button size="lg" className="w-full">Login</Button>
                 </div>
