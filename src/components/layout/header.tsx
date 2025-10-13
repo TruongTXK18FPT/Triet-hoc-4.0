@@ -7,12 +7,17 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
 import { PhiIcon } from '../icons/phi-icon';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 const navLinks = [
   { name: 'Home', href: '/' },
   { name: 'Roadmap AI', href: '/roadmap-ai' },
-  { name: 'Quiz', href: '/quiz' },
-  { name: 'Blog', href: '/blog' },
   { name: 'Timeline', href: '/timeline' },
   { name: 'Chatbot', href: '/chatbot' },
 ];
@@ -44,12 +49,31 @@ export function Header() {
             )}>Triết Học 4.0</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Button key={link.name} variant="ghost" asChild className={cn(scrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
                 <Link href={link.href}>{link.name}</Link>
               </Button>
             ))}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className={cn("gap-1", scrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
+                  Quiz
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link href="/quiz">Làm Quiz</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/quiz/create">Tạo Quiz Mới</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+             <Button variant="ghost" asChild className={cn(scrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
+                <Link href="#">Blog</Link>
+              </Button>
           </nav>
           
           <div className="hidden md:flex items-center gap-2">
@@ -89,6 +113,9 @@ export function Header() {
                         {link.name}
                       </Link>
                     ))}
+                     <Link href="/quiz" className="text-lg font-medium text-foreground/80 hover:text-primary" onClick={() => setMenuOpen(false)}>Làm Quiz</Link>
+                     <Link href="/quiz/create" className="text-lg font-medium text-foreground/80 hover:text-primary" onClick={() => setMenuOpen(false)}>Tạo Quiz</Link>
+                     <Link href="#" className="text-lg font-medium text-foreground/80 hover:text-primary" onClick={() => setMenuOpen(false)}>Blog</Link>
                   </nav>
                   <Button size="lg" className="w-full">Login</Button>
                 </div>

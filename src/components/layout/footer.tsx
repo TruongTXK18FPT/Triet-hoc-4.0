@@ -22,8 +22,9 @@ const footerSections = [
       title: 'Quick Links',
       links: [
         { name: 'Roadmap AI', href: '/roadmap-ai' },
-        { name: 'Quiz', href: '/quiz' },
-        { name: 'Blog', href: '/blog' },
+        { name: 'Làm Quiz', href: '/quiz' },
+        { name: 'Tạo Quiz', href: '/quiz/create' },
+        { name: 'Blog', href: '#' },
         { name: 'Timeline', href: '/timeline' },
       ],
     },
