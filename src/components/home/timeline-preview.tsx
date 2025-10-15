@@ -53,12 +53,12 @@ export function TimelinePreview() {
           </p>
         </div>
 
-        <Carousel className="w-full max-w-6xl mx-auto">
+        <Carousel className="w-full max-w-6xl mx-auto animate-fade-in-up">
           <CarouselContent className="-ml-4">
             {previewEvents.map((event) => (
               <CarouselItem key={event.title} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
-                  <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md bg-card/70 backdrop-blur-sm border-coffee-dark/20" style={{'--tw-shadow-color': 'hsl(var(--primary) / 0.1)'} as React.CSSProperties}>
+                  <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md bg-card/70 backdrop-blur-sm border-coffee-dark/20 transition-transform duration-500 hover:-translate-y-1" style={{'--tw-shadow-color': 'hsl(var(--primary) / 0.1)'} as React.CSSProperties}>
                     <CardHeader>
                       <p className="text-4xl font-bold text-accent font-headline">{event.year}</p>
                       <CardTitle className="font-headline text-xl text-primary pt-2">{event.title}</CardTitle>
@@ -67,8 +67,8 @@ export function TimelinePreview() {
                       <p className="text-foreground/70">{event.description}</p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="link" className="text-accent font-semibold p-0" onClick={() => handleExplainClick(event)}>
-                        AI Explain &rarr;
+                      <Button variant="link" className="text-accent font-semibold p-0 hover:translate-x-1 transition-transform" onClick={() => handleExplainClick(event)}>
+                        AI Explain →
                       </Button>
                     </CardFooter>
                   </Card>

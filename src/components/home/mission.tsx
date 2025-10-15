@@ -23,7 +23,7 @@ export function Mission() {
   return (
     <section id="mission" className="py-20 md:py-32">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in-up">
           <h2 className="font-headline text-4xl md:text-5xl font-bold text-primary mb-4">Sứ Mệnh Của Triết Học 4.0</h2>
           <p className="text-lg text-foreground/80">
             Chúng tôi tin rằng triết học không phải là những trang sách khô khan. Bằng cách kết hợp giữa chiều sâu tư tưởng và sức mạnh công nghệ, Triết Học 4.0 mang đến một phương pháp học tập hiện đại, truyền cảm hứng và dễ dàng tiếp cận cho mọi sinh viên.
@@ -32,7 +32,7 @@ export function Mission() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {missionCards.map((card, index) => (
-            <Card key={index} className="text-center p-6 border-transparent shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-2 rounded-xl bg-white/50">
+            <Card key={index} className="text-center p-6 border-transparent shadow-lg hover:shadow-primary/20 transition-all duration-500 transform hover:-translate-y-2 rounded-xl bg-white/50 animate-fade-in-up" style={{ animationDelay: `${index * 120}ms` }}>
               <div className="flex justify-center">{card.icon}</div>
               <CardHeader className="p-0">
                 <CardTitle className="font-headline text-2xl text-primary mt-2">{card.title}</CardTitle>

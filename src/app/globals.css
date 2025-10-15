@@ -68,3 +68,35 @@
     background-image: linear-gradient(to bottom, hsl(var(--background)), #d7d2cf);
   }
 }
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  @keyframes fade-in-up {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .bg-radial-soft {
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%);
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 8s infinite ease-in-out;
+  }
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(0.6); opacity: 0.2; }
+    50% { transform: scale(1); opacity: 0.1; }
+  }
+
+  .radial-glow {
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%);
+    animation: pulse-slow 8s infinite ease-in-out;
+    transform: translateX(-30%);
+  }
+}

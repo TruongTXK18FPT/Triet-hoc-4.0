@@ -1,30 +1,27 @@
 'use client';
 
 import Image from 'next/image';
+import leninBg from '@/assets/leninBackground.jpg';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Hero() {
-  const heroImage = PlaceHolderImages.find(p => p.id === 'hero-background');
+  // Background now uses local asset `leninBackground.jpg` for consistency
 
   return (
     <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
-      {heroImage && (
-        <Image
-          src={heroImage.imageUrl}
-          alt={heroImage.description}
-          fill
-          className="object-cover"
-          priority
-          data-ai-hint={heroImage.imageHint}
-        />
-      )}
-      <div className="absolute inset-0 bg-primary/70 backdrop-blur-[2px]"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent"></div>
+      <Image
+        src={leninBg}
+        alt="Lenin background"
+        fill
+        className="object-cover scale-105"
+        priority
+      />
+      <div className="absolute inset-0 bg-black/40"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent"></div>
 
       {/* Light beam effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%) animate-pulse-slow"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] bg-radial-soft animate-pulse-slow"></div>
 
       <div className="relative z-10 p-4 animate-fade-in-up">
         <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight">
@@ -42,29 +39,7 @@ export function Hero() {
           </Button>
         </div>
       </div>
-      <style jsx>{`
-        .animate-fade-in-up {
-          animation: fade-in-up 1s ease-out forwards;
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        @keyframes fade-in-up {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .bg-radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%) {
-          background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%);
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 8s infinite ease-in-out;
-        }
-        @keyframes pulse-slow {
-          0%, 100% { transform: scale(0.5) translate(-100%, -100%); opacity: 0.2; }
-          50% { transform: scale(1) translate(-50%, -50%); opacity: 0.1; }
-        }
-      `}</style>
+      {/* styles moved to globals.css utilities */}
     </section>
   );
 }

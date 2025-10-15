@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import 'dotenv/config';
 import {z} from 'genkit';
 
 const GenerateStudyRoadmapInputSchema = z.object({
@@ -30,18 +31,35 @@ export async function generateStudyRoadmap(input: GenerateStudyRoadmapInput): Pr
   return generateStudyRoadmapFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateStudyRoadmapPrompt',
-  input: {schema: GenerateStudyRoadmapInputSchema},
-  output: {schema: GenerateStudyRoadmapOutputSchema},
-  prompt: `You are an expert in Marxism-Leninism and an experienced educator. Your task is to generate a personalized study roadmap for a student based on their current knowledge level and learning goals.
-
-Knowledge Level: {{{knowledgeLevel}}}
-Learning Goals: {{{learningGoals}}}
-
-Generate a clear, concise, and effective study roadmap with the most important learning goals listed first. The roadmap should include specific topics and resources the student should study to achieve their goals. The roadmap should have between 5 and 10 topics. Return only the roadmap topics as a list.
-`,
-});
+// Helper: call Mistral API for roadmap (uses MISTRAL_API_KEY)
+async function callMistralRoadmap(promptText: string): Promise<string> {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing MISTRAL_API_KEY');
+  }
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'mistral-large-latest',
+      messages: [
+        { role: 'system', content: 'Bạn là chuyên gia về Chủ nghĩa Mác–Lênin và là nhà giáo có kinh nghiệm. Luôn trả lời bằng tiếng Việt, văn phong mạch lạc, sắp xếp theo mục dễ đọc.' },
+        { role: 'user', content: promptText },
+      ],
+      temperature: 0.4,
+    }),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Mistral error: ${response.status} ${detail}`);
+  }
+  const data = await response.json() as any;
+  const text: string = data?.choices?.[0]?.message?.content ?? '';
+  return text;
+}
 
 const generateStudyRoadmapFlow = ai.defineFlow(
   {
@@ -50,7 +68,18 @@ const generateStudyRoadmapFlow = ai.defineFlow(
     outputSchema: GenerateStudyRoadmapOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const promptText = `Hãy tạo LỘ TRÌNH HỌC TRIẾT MÁC–LÊNIN cá nhân hoá (5–10 mục) theo cấu trúc sau, trả về bằng văn bản thuần mỗi mục trên một dòng:
+1) [Tiêu đề ngắn gọn] — [Mô tả 1–2 câu] — [3 gợi ý tài liệu/link tham khảo nếu có]
+
+Thông tin người học:
+- Trình độ hiện tại: ${input.knowledgeLevel}
+- Mục tiêu học tập: ${input.learningGoals}
+
+Yêu cầu:
+- Trình bày dạng danh sách đánh số 1..n, mỗi mục một dòng.
+- Chủ đề gợi ý thuộc: phép biện chứng duy vật, duy vật lịch sử, kinh tế chính trị Mác–Lênin, CNXH khoa học, tư tưởng Hồ Chí Minh (liên hệ Việt Nam).
+- Gợi ý link ưu tiên: nguồn mở, bài giảng, thư viện, tác phẩm kinh điển (nếu không có link cụ thể thì ghi "(gợi ý: tìm đọc tác phẩm …)").`;
+    const roadmap = await callMistralRoadmap(promptText);
+    return { roadmap };
   }
 );

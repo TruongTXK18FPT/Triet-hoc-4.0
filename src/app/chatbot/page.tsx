@@ -6,13 +6,14 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Send, User, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { chatWithVuaTrietAI } from '@/ai/flows/vua-triet-ai-flow';
 import type { MessageData } from 'genkit/experimental/ai';
 import Image from 'next/image';
+import aiLogo from '@/assets/aiLogo.png';
 
 interface Message {
   id: string;
@@ -85,7 +86,7 @@ export default function ChatbotPage() {
         <Card className="w-full max-w-3xl h-[80vh] min-h-[600px] flex flex-col bg-card/80 backdrop-blur-lg shadow-2xl rounded-2xl overflow-hidden">
           <header className="flex items-center p-4 border-b bg-primary/5">
             <Avatar className="h-12 w-12 mr-4 border-2 border-accent">
-               <Image src="/logo.png" alt="Vua Triết AI Logo" width={48} height={48} className="object-contain" />
+              <Image src={aiLogo} alt="Vua Triết AI Logo" width={48} height={48} className="object-contain" />
             </Avatar>
             <div>
               <h1 className="font-headline text-2xl font-bold text-primary">Vua Triết AI</h1>
@@ -111,7 +112,7 @@ export default function ChatbotPage() {
                     >
                         {message.role === 'model' && (
                         <Avatar className="h-8 w-8 bg-accent text-accent-foreground flex-shrink-0">
-                           <Image src="/logo.png" alt="Vua Triết AI Logo" width={24} height={24} className="object-contain p-1" />
+                          <Image src={aiLogo} alt="Vua Triết AI Logo" width={24} height={24} className="object-contain p-1" />
                         </Avatar>
                         )}
                         <div
@@ -134,7 +135,7 @@ export default function ChatbotPage() {
                     {isPending && (
                         <div className="flex items-start gap-4 justify-start animate-in fade-in">
                             <Avatar className="h-8 w-8 bg-accent text-accent-foreground flex-shrink-0">
-                                <Image src="/logo.png" alt="Vua Triết AI Logo" width={24} height={24} className="object-contain p-1" />
+                                <Image src={aiLogo} alt="Vua Triết AI Logo" width={24} height={24} className="object-contain p-1" />
                             </Avatar>
                             <div className="max-w-[75%] p-3 rounded-2xl bg-muted rounded-bl-none flex items-center gap-2">
                                <span className="h-2 w-2 bg-foreground/50 rounded-full animate-bounce [animation-delay:-0.3s]"></span>

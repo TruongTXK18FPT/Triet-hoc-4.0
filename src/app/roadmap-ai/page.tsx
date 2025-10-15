@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,7 +28,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Wand2, Link as LinkIcon } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 const formSchema = z.object({
   knowledgeLevel: z.string({
@@ -42,6 +44,7 @@ const formSchema = z.object({
 export default function RoadmapAI() {
   const [isPending, startTransition] = useTransition();
   const [roadmap, setRoadmap] = useState<GenerateStudyRoadmapOutput | null>(null);
+  const [completed, setCompleted] = useState<Set<number>>(new Set());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,6 +56,7 @@ export default function RoadmapAI() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setRoadmap(null);
+    setCompleted(new Set());
     startTransition(async () => {
       const result = await generateStudyRoadmap(values);
       setRoadmap(result);
@@ -71,8 +75,8 @@ export default function RoadmapAI() {
       <main className="flex-grow container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">
-              AI Study Roadmap
+            <h1 className="font-headline text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
+              Lộ Trình Học Tập Bởi AI
             </h1>
             <p className="text-lg text-foreground/80 mt-4">
               Hãy để AI xây dựng lộ trình học tập Triết học Mác – Lênin được cá
@@ -177,12 +181,86 @@ export default function RoadmapAI() {
                     </div>
                   ) : (
                      roadmap && (
-                      <Textarea
-                        value={roadmap.roadmap}
-                        onChange={handleRoadmapChange}
-                        className="w-full min-h-[300px] text-base leading-relaxed bg-background/50"
-                        placeholder="Lộ trình của bạn sẽ xuất hiện ở đây..."
-                      />
+                      <div className="space-y-6">
+                        {(() => {
+                          const items = roadmap.roadmap.split('\n').filter(Boolean);
+                          const parsed = items.map((line) => {
+                            const [titlePart, descPart, linksPart] = line.split(' — ').map(s => s?.trim());
+                            const links = (linksPart || '')
+                              .split(/;|,|\|/)
+                              .map(s => s.trim())
+                              .filter(Boolean);
+                            return { title: titlePart || line, desc: descPart || '', links };
+                          });
+                          return (
+                            <div className="grid grid-cols-1 gap-4">
+                              {parsed.map((it, idx) => (
+                                <div key={idx} className={`relative p-4 rounded-xl border bg-white/70 backdrop-blur vintage-card ${completed.has(idx+1) ? 'ring-1 ring-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white' : ''}`}>
+                                  <div className="flex items-start gap-3">
+                                    <div className={`mt-0.5 h-6 w-6 rounded-md border flex items-center justify-center ${completed.has(idx+1) ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-white'}`}>
+                                      <Checkbox
+                                        checked={completed.has(idx+1)}
+                                        onCheckedChange={(val) => {
+                                          setCompleted(prev => {
+                                            const next = new Set(prev);
+                                            if (val) next.add(idx+1); else next.delete(idx+1);
+                                            return next;
+                                          });
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-300 to-yellow-400 text-primary flex items-center justify-center ring-1 ring-amber-500/40 shadow">
+                                          <span className="font-bold">{idx+1}</span>
+                                        </div>
+                                        <h3 className="font-semibold">{it.title}</h3>
+                                      </div>
+                                      {it.desc && <p className="leading-relaxed mt-1 text-sm text-foreground/80">{it.desc}</p>}
+                                      {it.links.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                          {it.links.map((l, i) => (
+                                            <a key={i} href={/^https?:\/\//.test(l) ? l : undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 underline decoration-amber-300 underline-offset-4">
+                                              <LinkIcon className="h-3.5 w-3.5" />
+                                              <span className="text-sm truncate max-w-[220px]">{l}</span>
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                        {/* Flow chart interactive */}
+                        <div className="mt-6">
+                          {(() => {
+                            const Flow = dynamic(() => import('@/components/roadmap/RoadmapFlow').then(m => m.RoadmapFlow), { ssr: false });
+                            const items = roadmap.roadmap.split('\n').filter(Boolean);
+                            return (
+                              <Flow
+                                lines={items}
+                                completedIds={completed}
+                                onToggleComplete={(index) => {
+                                  setCompleted(prev => {
+                                    const next = new Set(prev);
+                                    const id = index + 1;
+                                    if (next.has(id)) next.delete(id); else next.add(id);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            );
+                          })()}
+                        </div>
+                        <div className="relative p-4 rounded-xl border bg-white/60 backdrop-blur">
+                          <p className="text-sm text-foreground/70">
+                            Gợi ý: Bạn có thể chỉnh sửa từng mục trong danh sách trên để cá nhân hóa thêm. Sau đó lưu lại dưới dạng ghi chú.
+                          </p>
+                        </div>
+                      </div>
                     )
                   )}
                 </CardContent>

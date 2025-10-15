@@ -60,11 +60,15 @@ export function Features() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Link key={index} href={feature.href} className="block">
-                <Card className="h-full bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
-                <CardHeader>
+            <Link key={index} href={feature.href} className="block group">
+                <Card className="h-full bg-card/80 backdrop-blur-sm border-border/50 shadow-lg transition-all duration-500 transform group-hover:-translate-y-1 group-hover:shadow-2xl relative overflow-hidden">
+                <span aria-hidden className="pointer-events-none absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-amber-400/40 via-yellow-300/30 to-amber-500/40 blur"></span>
+                <CardHeader className="relative">
                     <div className="mb-4">{feature.icon}</div>
-                    <CardTitle className="font-headline text-2xl text-primary">{feature.title}</CardTitle>
+                    <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+                      {feature.title}
+                      <span className="transform transition-transform duration-500 group-hover:translate-x-1">→</span>
+                    </CardTitle>
                     <CardDescription className="pt-2 text-foreground/70">{feature.description}</CardDescription>
                 </CardHeader>
                 </Card>

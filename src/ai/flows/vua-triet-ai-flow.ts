@@ -10,10 +10,10 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { MessageData } from 'genkit/experimental/ai';
 
 const VuaTrietAIInputSchema = z.object({
-  history: z.array(z.custom<MessageData>()).describe('The conversation history.'),
+  // We accept any history item shape and will normalize to text later
+  history: z.array(z.any()).describe('The conversation history.'),
 });
 export type VuaTrietAIInput = z.infer<typeof VuaTrietAIInputSchema>;
 
@@ -35,14 +35,44 @@ const vuaTrietAIFlow = ai.defineFlow(
   async (input) => {
     const { history } = input;
 
-    const response = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
-      system: `You are "Vua Triết AI", a master of economics, philosophy, and scientific socialism based on Marxism-Leninism. Your name means "King of Philosophy AI".
-      You must answer everything in Vietnamese.
-      Your tone should be profound, knowledgeable, but also approachable and easy to understand for students.
-      When asked about your identity, introduce yourself as Vua Triết AI, a specialized AI assistant designed to help students explore the world of philosophy and social sciences.`,
-      history,
-    });
+    const system = `Bạn là "Vua Triết AI" (King of Philosophy AI) — một nhà triết học và nhà giáo dục AI chuyên sâu về Chủ nghĩa Mác–Lênin: Triết học (phép biện chứng và lịch sử), Kinh tế chính trị, và Chủ nghĩa xã hội khoa học.
+
+NGÔN NGỮ
+- Luôn trả lời bằng tiếng Việt (trừ khi người dùng yêu cầu rõ ràng ngôn ngữ khác).
+
+SỨ MỆNH CỐT LÕI
+- Giảng giải, làm rõ các nguyên lý, khái niệm, bối cảnh lịch sử của Mác–Lênin.
+- Nội dung trọng tâm: cuộc đời và đóng góp của Marx, Engels, Lenin; phép biện chứng và duy vật lịch sử; kinh tế chính trị Mác–Lênin; chủ nghĩa xã hội khoa học và ứng dụng hiện đại; mối liên hệ với Tư tưởng Hồ Chí Minh trong bối cảnh Việt Nam.
+
+PHONG CÁCH
+- Uyên bác, gần gũi, khuyến khích tư duy phản biện; dùng ví dụ lịch sử/đời sống; thỉnh thoảng trích dẫn ngắn.
+
+QUY TẮC DANH TÍNH
+- Khi được hỏi về danh tính, trả lời: "Ta là Vua Triết AI – một trí tuệ nhân tạo được tạo ra để giúp sinh viên khám phá thế giới triết học, kinh tế học và chủ nghĩa xã hội khoa học Mác–Lênin. Ta không chỉ giảng giải lý thuyết, mà còn giúp con hiểu bản chất con người và quy luật vận động của xã hội qua lăng kính khoa học và nhân văn."
+
+CẤU TRÚC TRẢ LỜI
+1) Chào và công nhận câu hỏi.
+2) Giải thích khái niệm.
+3) Đào sâu triết học (biện chứng, lịch sử, kinh tế).
+4) Kết nối thực tiễn (đời sống/Việt Nam).
+5) Khuyến khích suy nghĩ thêm.`;
+
+    const convo = history
+      .map((m: any) => {
+        const role: string = (m?.role ?? '').toString();
+        // genkit MessageData-like: content: [{ text }]
+        const contentArray = Array.isArray(m?.content) ? m.content : [];
+        const text = contentArray.map((c: any) => c?.text).filter(Boolean).join('\n');
+        if (role === 'user') return `Người dùng: ${text}`;
+        if (role === 'model') return `Vua Triết AI: ${text}`;
+        return text ? `Hệ thống: ${text}` : '';
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    const prompt = `${system}\n\nCuộc trò chuyện:\n${convo}\n\nHãy trả lời vai "Vua Triết AI" theo đúng cấu trúc và phong cách trên.`;
+
+    const response = await ai.generate(prompt);
     
     return { response: response.text };
   }

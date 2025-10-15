@@ -18,3 +18,18 @@
 - Minimalist line-art icons in olive or beige tones, maintaining a consistent style across the platform.
 - Balanced whitespace and a center composition to convey philosophical harmony, complemented by subtle gradients.
 - Gentle fade-in, slide-up, and glowing effects to create a visually engaging and enlightened user experience.
+
+## Data & Storage
+
+Add your Neon Postgres connection string to `.env` as `DATABASE_URL`:
+
+```
+DATABASE_URL="postgresql://neondb_owner:***@ep-twilight-tree-a18wb3gk-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+```
+
+Then generate and migrate Prisma:
+
+```
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+```
