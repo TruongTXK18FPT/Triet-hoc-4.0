@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ChatbotWidget } from '@/components/layout/ChatbotWidget';
 import { ClientProviders } from './ClientProviders';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: 'Triết Học AI',
@@ -30,6 +31,7 @@ export default function RootLayout({
           <Toaster />
           <ChatbotWidget />
         </ClientProviders>
+        <Analytics />
       </body>
     </html>
   );
