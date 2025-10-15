@@ -29,11 +29,11 @@ const prompt = ai.definePrompt({
   name: 'explainConceptPrompt',
   input: {schema: ExplainConceptInputSchema},
   output: {schema: ExplainConceptOutputSchema},
-  prompt: `You are an expert in philosophy, skilled at explaining complex concepts in a simple and accessible way.
+  prompt: `Bạn là một chuyên gia triết học, giỏi diễn giải các khái niệm phức tạp theo cách đơn giản, dễ tiếp cận.
 
-  Explain the following philosophical concept in a way that is easy for a university student to understand:
+  Hãy giải thích khái niệm triết học sau đây theo cách dễ hiểu đối với sinh viên đại học. Sử dụng ngôn ngữ tự nhiên, rõ ràng, ví dụ minh họa khi cần. Trả lời HOÀN TOÀN BẰNG TIẾNG VIỆT.
 
-  Concept: {{{concept}}}`,
+  Khái niệm: {{{concept}}}`,
 });
 
 const explainConceptFlow = ai.defineFlow(
