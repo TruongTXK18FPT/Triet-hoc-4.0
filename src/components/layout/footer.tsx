@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Facebook, Twitter, Instagram, Linkedin, Sparkles } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Sparkles, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import logoMLN from '@/assets/logoMLN.png';
 
@@ -14,9 +14,10 @@ const footerSections = [
     {
       title: 'Về Chúng Tôi',
       links: [
-        { name: 'Sứ mệnh', href: '#mission' },
-        { name: 'Đội ngũ', href: '#' },
-        { name: 'Tuyển dụng', href: '#' },
+        { name: 'Sứ mệnh', href: '/mission' },
+        { name: 'Đội ngũ', href: '/team' },
+        { name: 'Tuyển dụng', href: '/careers' },
+        { name: 'AI Usage', href: '/ai-commitment' }
       ],
     },
     {
@@ -44,35 +45,79 @@ export function Footer() {
     <footer className="relative text-primary-foreground overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/95 to-primary" />
       <div className="container mx-auto px-4 py-12 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="mb-6 md:mb-0 lg:col-span-1">
              <Link href="/" className="flex items-center gap-3 mb-4 group">
-              <Image src={logoMLN} alt="Triết Học 4.0 Logo" width={140} height={140} className="h-9 w-auto object-contain mix-blend-luminosity"/>
+              <Image 
+                src={logoMLN} 
+                alt="Triết Học 4.0 Logo" 
+                width={140} 
+                height={140} 
+                className="h-9 w-auto object-contain"
+                style={{ filter: 'sepia(1) saturate(600%) hue-rotate(330deg) brightness(0.7) contrast(1.1)' }}
+              />
               <span className="font-semibold tracking-wide">Triết Học 4.0</span>
             </Link>
             <p className="text-sm text-primary-foreground/80">Nền tảng học tập triết học Mác – Lênin bằng AI.</p>
           </div>
           
-          {footerSections.map(section => (
-            <div key={section.title}>
-              <h3 className="font-headline font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-300" />
-                {section.title}
-              </h3>
-              <ul className="space-y-2">
-                {section.links.map(link => (
-                  <li key={link.name}>
-                    <Link href={link.href} className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group">
-                      <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h3 className="font-headline font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              Về Chúng Tôi
+            </h3>
+            <ul className="space-y-2">
+              <li><Link href="/mission" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Sứ mệnh</Link></li>
+              <li><Link href="/team" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Đội ngũ</Link></li>
+              <li><Link href="/careers" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Tuyển dụng</Link></li>
+              <li><Link href="/ai-commitment" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Cam kết AI</Link></li>
+            </ul>
+          </div>
 
-          
+          <div>
+            <h3 className="font-headline font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              Quick Links
+            </h3>
+            <ul className="space-y-2">
+              <li><Link href="/roadmap-ai" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Roadmap AI</Link></li>
+              <li><Link href="/quiz" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Làm Quiz</Link></li>
+              <li><Link href="/quiz/create" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Tạo Quiz</Link></li>
+              <li><Link href="/blog" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Blog</Link></li>
+              <li><Link href="/timeline" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Timeline</Link></li>
+              <li><Link href="/review" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Đánh giá</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-headline font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              Liên Hệ
+            </h3>
+            <ul className="space-y-2">
+              <li><a href="mailto:tranxuantin1234@gmail.com" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Email: tranxuantin1234@gmail.com</a></li>
+              <li><span className="text-sm text-primary-foreground/80">Hotline: =D</span></li>
+              <li><a href="https://maps.app.goo.gl/VmS5hFzs9TJgXfhU9" target="_blank" rel="noopener noreferrer" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group flex items-start gap-1"><MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" /><span className="flex-1">7 Đ. D1, Khu CNC, Thủ Đức</span></a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-headline font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-amber-300" />
+              Vị trí
+            </h3>
+            <div className="rounded-lg overflow-hidden border-2 border-white/20">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.4590718546936!2d106.80739!3d10.841128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1234567890"
+                width="100%"
+                height="150"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
         </div>
         <div className="mt-12 border-t border-primary-foreground/20 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-primary-foreground/70 mb-4 md:mb-0">&copy; {new Date().getFullYear()} Triết Học 4.0. All rights reserved.</p>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X, Home, Route, CalendarClock, ListChecks, Newspaper, Sparkles, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, Home, Route, CalendarClock, ListChecks, Newspaper, Sparkles, LogOut, User as UserIcon, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import logoMLN from '@/assets/logoMLN.png';
@@ -19,6 +19,7 @@ const navLinks = [
   { name: 'Dòng thời gian', href: '/timeline', icon: CalendarClock },
   { name: 'Trắc nghiệm', href: '/quiz', icon: ListChecks },
   { name: 'Blog', href: '/blog', icon: Newspaper },
+  { name: 'Đánh giá', href: '/review', icon: Star },
 ];
 
 export function Header() {
@@ -35,10 +36,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-300",
-      scrolled ? "bg-background/80 backdrop-blur-lg shadow-md border-b" : "bg-transparent"
-    )}>
+    <header className="sticky top-0 z-50 w-full bg-[#44392d] shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
@@ -47,11 +45,10 @@ export function Header() {
               alt="Triết Học 4.0 - Logo"
               width={120}
               height={120}
-              className={cn(
-                "h-10 w-auto object-contain mix-blend-multiply dark:mix-blend-normal drop-shadow-sm"
-              )}
+              className="h-10 w-auto object-contain drop-shadow-lg"
+              style={{ filter: 'sepia(1) saturate(600%) hue-rotate(330deg) brightness(0.7) contrast(1.1)' }}
             />
-            <span className="relative font-extrabold tracking-tight leading-none text-xl md:text-2xl text-[#483826] dark:text-amber-200 select-none">
+            <span className="relative font-extrabold tracking-tight leading-none text-xl md:text-2xl text-white select-none">
               Triết học 4.0
               <span aria-hidden className="pointer-events-none absolute -inset-1 rounded-md opacity-0 group-hover:opacity-20 transition-opacity duration-700 bg-radial-soft" />
             </span>
@@ -68,12 +65,8 @@ export function Header() {
                   asChild
                   variant={isHighlight ? 'default' : 'ghost'}
                   className={cn(
-                    'gap-2',
-                    isHighlight
-                      ? 'relative bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow hover:from-amber-600 hover:to-yellow-600'
-                      : scrolled
-                        ? 'text-foreground'
-                        : 'text-white hover:bg-white/10'
+                    'gap-2 text-white/90 hover:text-white hover:bg-white/10',
+                    isHighlight && 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow hover:from-amber-600 hover:to-yellow-600'
                   )}
                 >
                   <Link href={link.href} className="flex items-center">
@@ -96,11 +89,11 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="h-9 w-9 ring-2 ring-white/20">
                       <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'user'} />
                       <AvatarFallback><UserIcon className="h-4 w-4"/></AvatarFallback>
                     </Avatar>
-                    <span className={cn(scrolled ? 'text-foreground' : 'text-white')}>{session.user?.name || 'Tài khoản'}</span>
+                    <span className="text-white/90 hover:text-white">{session.user?.name || 'Tài khoản'}</span>
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -109,6 +102,11 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Hồ sơ</Link>
                   </DropdownMenuItem>
+                  {session.user?.email === 'admin@mln131.com' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">🔧 Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={()=>signOut({ callbackUrl: '/' })} className="text-red-600">
                     <LogOut className="h-4 w-4 mr-2"/> Đăng xuất
@@ -116,7 +114,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild variant={scrolled ? 'default' : 'outline'} className={cn(!scrolled && 'text-white border-white hover:bg-white hover:text-primary')}>
+              <Button asChild variant="outline" className="text-white border-white/30 hover:bg-white hover:text-[#44392d]">
                 <Link href="/login">Đăng nhập</Link>
               </Button>
             )}
@@ -125,7 +123,7 @@ export function Header() {
           <div className="md:hidden">
             <Sheet open={isMenuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className={cn(scrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
                   <Menu />
                   <span className="sr-only">Mở menu</span>
                 </Button>
@@ -134,7 +132,13 @@ export function Header() {
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-center border-b pb-4">
                      <Link href="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-                        <Image src={logoMLN} alt="Triết Học 4.0 - Logo" width={100} height={100} className="h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+                        <Image 
+                          src={logoMLN} 
+                          alt="Triết Học 4.0 - Logo" 
+                          width={100} 
+                          height={100} 
+                          className="h-8 w-auto object-contain"
+                        />
                     </Link>
                     <Button variant="ghost" size="icon" onClick={() => setMenuOpen(false)}>
                         <X/>

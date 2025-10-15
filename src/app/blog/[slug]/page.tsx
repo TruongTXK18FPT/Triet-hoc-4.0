@@ -5,19 +5,33 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { samplePosts } from '@/lib/sample-posts';
+import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Calendar, User, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Calendar, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function BlogPostPage() {
   const params = useParams();
   const { slug } = params;
 
-  const post = samplePosts.find(p => p.slug === slug);
+  const [post, setPost] = React.useState<any>(null);
+  const [notFound, setNotFound] = React.useState(false);
+  React.useEffect(() => {
+    if (!slug) return;
+    fetch(`/api/blog/${slug}`)
+      .then(async (r) => {
+        if (!r.ok) {
+          setNotFound(true);
+          return null;
+        }
+        const data = await r.json();
+        setPost(data);
+      })
+      .catch(() => setNotFound(true));
+  }, [slug]);
 
-  if (!post) {
+  if (notFound) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -38,8 +52,10 @@ export default function BlogPostPage() {
     );
   }
   
+  if (!post) return null;
+
   // A simple markdown to HTML converter
-  const contentHtml = post.content
+  const contentHtml = (post.content || '')
     .replace(/^### (.*$)/gim, '<h3 class="font-headline text-xl font-bold mt-8 mb-4 text-primary">$1</h3>')
     .replace(/^## (.*$)/gim, '<h2 class="font-headline text-2xl font-bold mt-10 mb-6 border-b pb-2 text-primary">$1</h2>')
     .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>')
@@ -65,26 +81,25 @@ export default function BlogPostPage() {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={post.authorAvatar} alt={post.author} />
-                    <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={post.author?.image || ''} alt={post.author?.name || ''} />
+                    <AvatarFallback>{(post.author?.name || 'U').charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-foreground">{post.author}</span>
+                  <span className="font-medium text-foreground">{post.author?.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{post.date}</span>
+                  <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
               </div>
             </header>
 
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-lg">
                 <Image
-                    src={post.imageUrl}
+                    src={post.coverUrl || '/favicon.ico'}
                     alt={post.title}
                     fill
                     className="object-cover"
                     priority
-                    data-ai-hint={post.imageHint}
                 />
             </div>
 

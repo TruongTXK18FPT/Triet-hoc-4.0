@@ -5,12 +5,26 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
-import { PlusCircle, User, Calendar } from 'lucide-react';
-import { samplePosts } from '@/lib/sample-posts';
+import { PlusCircle, Calendar } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
+type PostCard = {
+  id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  createdAt: string;
+  publishedAt?: string | null;
+  author: { id: string; name: string | null; image: string | null };
+};
+
 export default function BlogListPage() {
+  const [posts, setPosts] = useState<PostCard[]>([]);
+  useEffect(() => {
+    fetch('/api/blog').then(async (r) => setPosts(await r.json()));
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -35,17 +49,16 @@ export default function BlogListPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {samplePosts.map((post) => (
+            {posts.map((post) => (
               <Card key={post.slug} className="bg-card/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col overflow-hidden rounded-xl">
                 <CardHeader className="p-0">
                   <Link href={`/blog/${post.slug}`} className="block overflow-hidden">
                     <Image
-                      src={post.imageUrl}
+                      src={post.coverUrl || '/favicon.ico'}
                       alt={post.title}
                       width={400}
                       height={250}
                       className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
-                      data-ai-hint={post.imageHint}
                     />
                   </Link>
                 </CardHeader>
@@ -53,19 +66,19 @@ export default function BlogListPage() {
                    <CardTitle className="font-headline text-xl text-primary mb-2">
                      <Link href={`/blog/${post.slug}`} className="hover:text-accent transition-colors">{post.title}</Link>
                    </CardTitle>
-                  <CardDescription className="line-clamp-3">{post.description}</CardDescription>
+                  <CardDescription className="line-clamp-3">{post.author?.name}</CardDescription>
                 </CardContent>
                 <CardFooter className="p-6 pt-0 flex justify-between items-center text-sm text-muted-foreground">
                    <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                            <AvatarImage src={post.authorAvatar} alt={post.author} />
-                            <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={post.author?.image || ''} alt={post.author?.name || ''} />
+                            <AvatarFallback>{(post.author?.name || 'U').charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <span>{post.author}</span>
+                        <span>{post.author?.name}</span>
                    </div>
                    <div className="flex items-center gap-1">
                      <Calendar className="w-4 h-4"/>
-                     <span>{post.date}</span>
+                     <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString('vi-VN')}</span>
                    </div>
                 </CardFooter>
               </Card>
