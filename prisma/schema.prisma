@@ -188,13 +188,13 @@ model Review {
 model CrosswordGame {
   id          String              @id @default(cuid())
   title       String
-  description String?
   keyword     String
-  theme       String?
-  isPublic    Boolean             @default(false)
-  createdById String              @default("cmgs1ags6000017wrlybf5q42")
+  description String?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
+  createdById String              @default("cmgs1ags6000017wrlybf5q42")
+  isPublic    Boolean             @default(false)
+  theme       String?
   createdBy   User                @relation(fields: [createdById], references: [id])
   questions   CrosswordQuestion[]
 
@@ -205,16 +205,22 @@ model CrosswordGame {
 model CrosswordQuestion {
   id               String        @id @default(cuid())
   gameId           String
-  order            Int
   question         String
   answer           String
   explanation      String?
+  order            Int
   keywordCharIndex Int           @default(0)
   keywordColumn    Int           @default(5)
   game             CrosswordGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, order])
   @@index([gameId])
+}
+
+enum Role {
+  USER
+  MOD
+  ADMIN
 }
 
 model Course {
@@ -291,12 +297,6 @@ model CourseProgress {
 
   @@unique([userId, courseId])
   @@index([userId])
-}
-
-enum Role {
-  USER
-  MOD
-  ADMIN
 }
 
 enum PostStatus {

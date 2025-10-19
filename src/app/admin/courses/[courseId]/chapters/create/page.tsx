@@ -31,6 +31,7 @@ export default function CreateChapterPage() {
       question: "",
       options: ["", "", "", ""],
       correctIndex: 0,
+      explanation: "",
     },
   ]);
 
@@ -156,6 +157,7 @@ export default function CreateChapterPage() {
         question: "",
         options: ["", "", "", ""],
         correctIndex: 0,
+        explanation: "",
       },
     ]);
   };
@@ -367,6 +369,25 @@ export default function CreateChapterPage() {
                               />
                             </div>
                           ))}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`explanation-${questionIndex}`}>
+                            Giải thích đáp án
+                          </Label>
+                          <Textarea
+                            id={`explanation-${questionIndex}`}
+                            value={question.explanation}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                questionIndex,
+                                "explanation",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Giải thích tại sao đáp án này đúng..."
+                            rows={3}
+                          />
                         </div>
                       </div>
                     </Card>
