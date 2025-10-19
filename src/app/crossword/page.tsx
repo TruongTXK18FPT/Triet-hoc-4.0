@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,13 +37,25 @@ interface CrosswordGame {
 }
 
 export default function CrosswordGamesPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [games, setGames] = useState<CrosswordGame[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Kiểm tra quyền admin
+    if (status === "loading") return; // Đang loading session
+
+    if (
+      status === "unauthenticated" ||
+      session?.user?.email !== "admin@mln131.com"
+    ) {
+      router.push("/");
+      return;
+    }
+
     loadGames();
-  }, []);
+  }, [session, status, router]);
 
   const loadGames = async () => {
     try {
@@ -58,7 +71,8 @@ export default function CrosswordGamesPage() {
     }
   };
 
-  if (loading) {
+  // Hiển thị loading hoặc redirect
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <Header />
@@ -67,6 +81,11 @@ export default function CrosswordGamesPage() {
         </div>
       </div>
     );
+  }
+
+  // Nếu không phải admin, không hiển thị gì (đã redirect)
+  if (session?.user?.email !== "admin@mln131.com") {
+    return null;
   }
 
   return (

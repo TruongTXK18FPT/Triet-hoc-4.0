@@ -37,7 +37,6 @@ const navLinks = [
   { name: "Lộ trình AI", href: "/roadmap-ai", icon: Sparkles, highlight: true },
   { name: "Dòng thời gian", href: "/timeline", icon: CalendarClock },
   { name: "Trắc nghiệm", href: "/quiz", icon: ListChecks },
-  { name: "Crossword", href: "/crossword", icon: Target },
   { name: "Blog", href: "/blog", icon: Newspaper },
   { name: "Đánh giá", href: "/review", icon: Star },
 ];
@@ -112,6 +111,19 @@ export function Header() {
                 </Button>
               );
             })}
+            {/* Crossword tab chỉ hiển thị cho admin */}
+            {session?.user?.email === "admin@mln131.com" && (
+              <Button
+                asChild
+                variant="ghost"
+                className="gap-2 text-white/90 hover:text-white hover:bg-white/10"
+              >
+                <Link href="/crossword" className="flex items-center">
+                  <Target className="h-4 w-4" />
+                  <span className="ml-1">Crossword</span>
+                </Link>
+              </Button>
+            )}
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
@@ -231,14 +243,24 @@ export function Header() {
                       <span>Tạo trắc nghiệm</span>
                     </Link>
                     {session?.user?.email === "admin@mln131.com" && (
-                      <Link
-                        href="/admin"
-                        className="text-lg font-medium text-foreground/80 hover:text-primary flex items-center gap-2"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <UserIcon className="h-5 w-5" />
-                        <span>Admin Dashboard</span>
-                      </Link>
+                      <>
+                        <Link
+                          href="/crossword"
+                          className="text-lg font-medium text-foreground/80 hover:text-primary flex items-center gap-2"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <Target className="h-5 w-5" />
+                          <span>Crossword</span>
+                        </Link>
+                        <Link
+                          href="/admin"
+                          className="text-lg font-medium text-foreground/80 hover:text-primary flex items-center gap-2"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </>
                     )}
                   </nav>
                   {status === "authenticated" ? (

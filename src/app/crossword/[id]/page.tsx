@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ interface CrosswordGame {
 export default function PlayCrosswordGame() {
   const params = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [game, setGame] = useState<CrosswordGame | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameWon, setGameWon] = useState(false);
@@ -52,10 +54,21 @@ export default function PlayCrosswordGame() {
   const [isCheckingKeyword, setIsCheckingKeyword] = useState(false);
 
   useEffect(() => {
+    // Kiểm tra quyền admin
+    if (status === "loading") return; // Đang loading session
+
+    if (
+      status === "unauthenticated" ||
+      session?.user?.email !== "admin@mln131.com"
+    ) {
+      router.push("/");
+      return;
+    }
+
     if (params.id) {
       loadGame();
     }
-  }, [params.id]);
+  }, [params.id, session, status, router]);
 
   const loadGame = async () => {
     try {
@@ -164,7 +177,8 @@ export default function PlayCrosswordGame() {
     setGameWon(false);
   };
 
-  if (loading) {
+  // Hiển thị loading hoặc redirect
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <Header />
@@ -176,6 +190,11 @@ export default function PlayCrosswordGame() {
         </div>
       </div>
     );
+  }
+
+  // Nếu không phải admin, không hiển thị gì (đã redirect)
+  if (session?.user?.email !== "admin@mln131.com") {
+    return null;
   }
 
   if (!game) {
