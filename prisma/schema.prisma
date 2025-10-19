@@ -25,6 +25,7 @@ model User {
   roadmaps  Roadmap[]
   reviews   Review[]
   auditLogs AuditLog[] @relation("UserAuditLogs")
+  crosswordGames CrosswordGame[]
   createdAt DateTime  @default(now())
 }
 
@@ -205,6 +206,40 @@ model Review {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// ========== New: Crossword Games ==========
+
+model CrosswordGame {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  keyword     String            // Keyword dọc (VD: "CÔNGNHÂNXÃHỘI")
+  theme      String?           // Chủ đề (VD: "CHỦ NGHĨA XÃ HỘI KHOA HỌC")
+  isPublic    Boolean           @default(false)
+  questions   CrosswordQuestion[]
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  createdById String            @default("cmgs1ags6000017wrlybf5q42")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  @@index([createdById])
+  @@index([isPublic])
+}
+
+model CrosswordQuestion {
+  id              String         @id @default(cuid())
+  game            CrosswordGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId          String
+  order           Int            // Thứ tự câu hỏi (1-10)
+  question        String         // Câu hỏi gợi ý
+  answer          String         // Đáp án đúng
+  explanation     String?        // Giải thích
+  keywordCharIndex Int           @default(0) // Vị trí chữ cái trong answer tạo keyword (0-based)
+  keywordColumn   Int            @default(5) // Cột cố định cho keyword (0-based)
+  
+  @@index([gameId])
+  @@unique([gameId, order])
 }
 
 
