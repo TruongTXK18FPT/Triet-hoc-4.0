@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [crosswordGames, setCrosswordGames] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTimeline, setNewTimeline] = useState({
     year: "",
@@ -78,6 +79,7 @@ export default function AdminDashboard() {
         quizzesRes,
         reviewsRes,
         crosswordRes,
+        coursesRes,
       ] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/posts"),
@@ -85,6 +87,7 @@ export default function AdminDashboard() {
         fetch("/api/admin/quizzes"),
         fetch("/api/review?limit=100"),
         fetch("/api/crossword"),
+        fetch("/api/admin/courses"),
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
@@ -96,6 +99,7 @@ export default function AdminDashboard() {
         setReviews(data.reviews || []);
       }
       if (crosswordRes.ok) setCrosswordGames(await crosswordRes.json());
+      if (coursesRes.ok) setCourses(await coursesRes.json());
     } catch (error) {
       console.error("Error loading admin data:", error);
     } finally {
@@ -327,13 +331,14 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-white shadow-md">
+          <TabsList className="grid w-full grid-cols-7 bg-white shadow-md">
             <TabsTrigger value="posts">Bài viết chờ duyệt</TabsTrigger>
             <TabsTrigger value="users">Quản lý Users</TabsTrigger>
             <TabsTrigger value="quizzes">Quản lý Quizzes</TabsTrigger>
             <TabsTrigger value="reviews">Quản lý Reviews</TabsTrigger>
             <TabsTrigger value="timeline">Thêm Timeline</TabsTrigger>
             <TabsTrigger value="crossword">Trò chơi Crossword</TabsTrigger>
+            <TabsTrigger value="courses">Quản lý Khóa học</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts">
@@ -671,6 +676,109 @@ export default function AdminDashboard() {
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteCrossword(game.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Xóa
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="courses">
+            <Card className="shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Quản lý Khóa học ({courses.length})</CardTitle>
+                  <Button
+                    onClick={() => router.push("/admin/courses/create")}
+                    className="bg-[#44392d] hover:bg-[#5a4a3a] text-white"
+                  >
+                    Tạo khóa học mới
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  {courses.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-slate-500 mb-4">
+                        Chưa có khóa học nào
+                      </p>
+                      <Button
+                        onClick={() => router.push("/admin/courses/create")}
+                        className="bg-[#44392d] hover:bg-[#5a4a3a] text-white"
+                      >
+                        Tạo khóa học đầu tiên
+                      </Button>
+                    </div>
+                  ) : (
+                    courses.map((course) => (
+                      <div
+                        key={course.id}
+                        className="p-4 rounded-lg border-2 border-slate-200 bg-white hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg text-slate-900">
+                              {course.title}
+                            </h3>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {course.description || "Không có mô tả"} •{" "}
+                              {course.chapters?.length || 0} chương •{" "}
+                              {course._count?.CourseProgress || 0} học viên
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <Badge
+                                variant={
+                                  course.isPublished ? "default" : "secondary"
+                                }
+                              >
+                                {course.isPublished
+                                  ? "Đã xuất bản"
+                                  : "Bản nháp"}
+                              </Badge>
+                              <Badge variant="outline">
+                                {new Date(course.createdAt).toLocaleDateString(
+                                  "vi-VN"
+                                )}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                router.push(`/admin/courses/${course.id}/edit`)
+                              }
+                            >
+                              Sửa
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                router.push(`/courses/${course.id}`)
+                              }
+                            >
+                              Xem
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                if (
+                                  confirm("Bạn có chắc muốn xóa khóa học này?")
+                                ) {
+                                  // TODO: Implement delete course
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Xóa

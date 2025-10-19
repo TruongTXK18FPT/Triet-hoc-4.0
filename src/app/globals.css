@@ -65,9 +65,19 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: linear-gradient(to bottom, hsl(var(--background)), #d7d2cf);
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--background)),
+      #d7d2cf
+    );
+    overflow-x: hidden;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-headline;
   }
 }
@@ -86,36 +96,67 @@
   }
 
   .bg-radial-soft {
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%);
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0) 60%
+    );
   }
 
   .animate-pulse-slow {
     animation: pulse-slow 8s infinite ease-in-out;
   }
   @keyframes pulse-slow {
-    0%, 100% { transform: scale(0.6); opacity: 0.2; }
-    50% { transform: scale(1); opacity: 0.1; }
+    0%,
+    100% {
+      transform: scale(0.6);
+      opacity: 0.2;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 0.1;
+    }
   }
 
   .radial-glow {
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%);
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0) 60%
+    );
     animation: pulse-slow 8s infinite ease-in-out;
     transform: translateX(-30%);
   }
-  
-  @keyframes spin-slow { 
-    from { transform: rotate(0deg); } 
-    to { transform: rotate(360deg); } 
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
-  
-  @keyframes fadeInLeft { 
-    from { opacity: 0; transform: translateX(-15px); } 
-    to { opacity: 1; transform: translateX(0); } 
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
-  
-  @keyframes fadeInRight { 
-    from { opacity: 0; transform: translateX(15px); } 
-    to { opacity: 1; transform: translateX(0); } 
+
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @keyframes fadeInScale {
@@ -130,7 +171,8 @@
   }
 
   @keyframes blob {
-    0%, 100% {
+    0%,
+    100% {
       transform: translate(0, 0) scale(1);
     }
     25% {

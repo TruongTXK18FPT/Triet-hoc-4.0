@@ -94,13 +94,10 @@ export default function CrosswordGamesPage() {
 
       {/* Banner */}
       <div className="bg-gradient-to-r from-[#44392d] via-[#5a4a3a] to-[#44392d] text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-between mb-4">
-            <div></div>
-            <h1 className="text-5xl font-extrabold font-headline">
-              🎯 Trò chơi Crossword
-            </h1>
-            {session?.user?.email === "admin@mln131.com" && (
+        <div className="container mx-auto px-4">
+          {/* Admin buttons - positioned absolutely */}
+          {session?.user?.email === "admin@mln131.com" && (
+            <div className="flex justify-end mb-8">
               <div className="flex gap-2">
                 <Link href="/admin/crossword/create">
                   <Button
@@ -121,24 +118,31 @@ export default function CrosswordGamesPage() {
                   </Button>
                 </Link>
               </div>
-            )}
-          </div>
-          <p className="text-xl text-white/80 mb-6">
-            Thử thách trí tuệ với trò chơi ô chữ tìm keyword theo chủ đề
-            Marx-Lenin
-          </p>
-          <div className="flex justify-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              <span>Tìm keyword bí mật</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              <span>Trả lời câu hỏi</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>Học tập tương tác</span>
+          )}
+
+          {/* Main content - centered */}
+          <div className="text-center">
+            <h1 className="text-5xl font-extrabold font-headline mb-6">
+              🎯 Trò chơi Crossword
+            </h1>
+            <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
+              Thử thách trí tuệ với trò chơi ô chữ tìm keyword theo chủ đề
+              Marx-Lenin
+            </p>
+            <div className="flex justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                <span>Tìm keyword bí mật</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                <span>Trả lời câu hỏi</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Học tập tương tác</span>
+              </div>
             </div>
           </div>
         </div>

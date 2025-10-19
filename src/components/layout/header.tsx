@@ -17,6 +17,7 @@ import {
   User as UserIcon,
   Star,
   Target,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -34,6 +35,7 @@ import {
 
 const navLinks = [
   { name: "Trang chủ", href: "/", icon: Home },
+  { name: "Khóa học", href: "/courses", icon: BookOpen },
   { name: "Lộ trình AI", href: "/roadmap-ai", icon: Sparkles, highlight: true },
   { name: "Dòng thời gian", href: "/timeline", icon: CalendarClock },
   { name: "Trắc nghiệm", href: "/quiz", icon: ListChecks },

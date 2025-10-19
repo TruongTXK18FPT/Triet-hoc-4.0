@@ -7,32 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========== Core Models ==========
-
 model User {
-  id        String    @id @default(cuid())
-  name      String?
-  email     String    @unique
-  image     String?
-  role      Role      @default(USER)
-  password  String?
-  emailVerified DateTime?
-  accounts  Account[]
-  sessions  Session[]
-  posts     Post[]
-  comments  Comment[]
-  quizzes   Quiz[]
-  roadmaps  Roadmap[]
-  reviews   Review[]
-  auditLogs AuditLog[] @relation("UserAuditLogs")
+  id             String           @id @default(cuid())
+  name           String?
+  email          String           @unique
+  image          String?
+  role           Role             @default(USER)
+  password       String?
+  createdAt      DateTime         @default(now())
+  emailVerified  DateTime?
+  accounts       Account[]
+  auditLogs      AuditLog[]       @relation("UserAuditLogs")
+  comments       Comment[]
+  CourseProgress CourseProgress[]
   crosswordGames CrosswordGame[]
-  createdAt DateTime  @default(now())
-}
-
-enum Role {
-  USER
-  MOD
-  ADMIN
+  posts          Post[]
+  quizzes        Quiz[]
+  reviews        Review[]
+  roadmaps       Roadmap[]
+  sessions       Session[]
 }
 
 model Post {
@@ -42,35 +35,28 @@ model Post {
   content     String
   coverUrl    String?
   status      PostStatus  @default(DRAFT)
-  author      User        @relation(fields: [authorId], references: [id])
   authorId    String
-  tags        TagOnPost[]
-  comments    Comment[]
   views       Int         @default(0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   publishedAt DateTime?
   auditLogs   AuditLog[]
-}
-
-enum PostStatus {
-  DRAFT
-  PENDING
-  PUBLISHED
-  REJECTED
+  comments    Comment[]
+  author      User        @relation(fields: [authorId], references: [id])
+  tags        TagOnPost[]
 }
 
 model Tag {
-  id    String     @id @default(cuid())
-  name  String     @unique
+  id    String      @id @default(cuid())
+  name  String      @unique
   posts TagOnPost[]
 }
 
 model TagOnPost {
-  post   Post   @relation(fields: [postId], references: [id])
   postId String
-  tag    Tag    @relation(fields: [tagId], references: [id])
   tagId  String
+  post   Post   @relation(fields: [postId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
 
   @@id([postId, tagId])
 }
@@ -78,56 +64,52 @@ model TagOnPost {
 model Comment {
   id        String   @id @default(cuid())
   content   String
-  author    User     @relation(fields: [authorId], references: [id])
   authorId  String
-  post      Post     @relation(fields: [postId], references: [id])
   postId    String
   createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 }
 
 model Quiz {
   id        String     @id @default(cuid())
   title     String
-  author    User       @relation(fields: [authorId], references: [id])
   authorId  String
-  questions Question[]
   isPublic  Boolean    @default(false)
   createdAt DateTime   @default(now())
+  questions Question[]
+  author    User       @relation(fields: [authorId], references: [id])
 }
 
 model Question {
   id      String @id @default(cuid())
-  quiz    Quiz   @relation(fields: [quizId], references: [id])
   quizId  String
   prompt  String
-  options Json   // ["A","B","C","D"]
-  answer  Int    // correct index
+  options Json
+  answer  Int
+  quiz    Quiz   @relation(fields: [quizId], references: [id])
 }
 
 model TimelineEvent {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   year      Int
   title     String
   summary   String
   sourceUrl String?
-  order     Int      @default(0)
+  order     Int     @default(0)
 }
 
 model AuditLog {
   id        String   @id @default(cuid())
-  actor     User     @relation("UserAuditLogs", fields: [actorId], references: [id])
   actorId   String
-  action    String   // "APPROVE_POST" | "REJECT_POST" | ...
+  action    String
   targetId  String?
   meta      Json?
   createdAt DateTime @default(now())
-
-  // optional link to a specific post for audit trail
-  post      Post?    @relation(fields: [postId], references: [id])
   postId    String?
+  actor     User     @relation("UserAuditLogs", fields: [actorId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
 }
-
-// ========== Auth (NextAuth) ==========
 
 model Account {
   id                String  @id @default(cuid())
@@ -135,15 +117,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -164,82 +145,163 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ========== New: Roadmap Storage ==========
-
 model Roadmap {
-  id          String         @id @default(cuid())
-  user        User           @relation(fields: [userId], references: [id])
+  id          String        @id @default(cuid())
   userId      String
   title       String
   description String?
+  isPublic    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id])
   items       RoadmapItem[]
-  isPublic    Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
 
   @@index([userId])
 }
 
 model RoadmapItem {
-  id          String   @id @default(cuid())
-  roadmap     Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  id          String  @id @default(cuid())
   roadmapId   String
   order       Int
   title       String
   description String?
   links       Json?
-  completed   Boolean  @default(false)
+  completed   Boolean @default(false)
+  roadmap     Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 
-  @@index([roadmapId])
   @@unique([roadmapId, order])
+  @@index([roadmapId])
 }
-
-// ========== New: Site Reviews ==========
 
 model Review {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  rating    Int      // 1..5
+  rating    Int
   title     String?
   content   String
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
-// ========== New: Crossword Games ==========
-
 model CrosswordGame {
-  id          String            @id @default(cuid())
+  id          String              @id @default(cuid())
   title       String
   description String?
-  keyword     String            // Keyword dọc (VD: "CÔNGNHÂNXÃHỘI")
-  theme      String?           // Chủ đề (VD: "CHỦ NGHĨA XÃ HỘI KHOA HỌC")
-  isPublic    Boolean           @default(false)
+  keyword     String
+  theme       String?
+  isPublic    Boolean             @default(false)
+  createdById String              @default("cmgs1ags6000017wrlybf5q42")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  createdBy   User                @relation(fields: [createdById], references: [id])
   questions   CrosswordQuestion[]
-  createdBy   User              @relation(fields: [createdById], references: [id])
-  createdById String            @default("cmgs1ags6000017wrlybf5q42")
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  
+
   @@index([createdById])
   @@index([isPublic])
 }
 
 model CrosswordQuestion {
-  id              String         @id @default(cuid())
-  game            CrosswordGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId          String
-  order           Int            // Thứ tự câu hỏi (1-10)
-  question        String         // Câu hỏi gợi ý
-  answer          String         // Đáp án đúng
-  explanation     String?        // Giải thích
-  keywordCharIndex Int           @default(0) // Vị trí chữ cái trong answer tạo keyword (0-based)
-  keywordColumn   Int            @default(5) // Cột cố định cho keyword (0-based)
-  
-  @@index([gameId])
+  id               String        @id @default(cuid())
+  gameId           String
+  order            Int
+  question         String
+  answer           String
+  explanation      String?
+  keywordCharIndex Int           @default(0)
+  keywordColumn    Int           @default(5)
+  game             CrosswordGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
   @@unique([gameId, order])
+  @@index([gameId])
 }
 
+model Course {
+  id             String           @id @default(cuid())
+  title          String
+  description    String
+  coverUrl       String?
+  isPublished    Boolean          @default(false)
+  order          Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  chapters       Chapter[]
+  CourseProgress CourseProgress[]
 
+  @@index([isPublished, order])
+}
+
+model Chapter {
+  id              String            @id @default(cuid())
+  courseId        String
+  title           String
+  description     String?
+  videoUrl        String?
+  order           Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  youtubeUrl      String?
+  course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  ChapterProgress ChapterProgress[]
+  questions       ChapterQuestion[]
+
+  @@unique([courseId, order])
+  @@index([courseId, order])
+}
+
+model ChapterQuestion {
+  id           String  @id @default(cuid())
+  chapterId    String
+  question     String
+  options      Json
+  correctIndex Int
+  explanation  String?
+  order        Int
+  chapter      Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterId, order])
+  @@index([chapterId, order])
+}
+
+model ChapterProgress {
+  id               String         @id
+  courseProgressId String
+  chapterId        String
+  videoWatched     Boolean        @default(false)
+  quizCompleted    Boolean        @default(false)
+  quizScore        Int?
+  completedAt      DateTime?
+  Chapter          Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  CourseProgress   CourseProgress @relation(fields: [courseProgressId], references: [id], onDelete: Cascade)
+
+  @@unique([courseProgressId, chapterId])
+  @@index([courseProgressId])
+}
+
+model CourseProgress {
+  id               String            @id
+  userId           String
+  courseId         String
+  completedPercent Int               @default(0)
+  lastAccessedAt   DateTime          @default(now())
+  ChapterProgress  ChapterProgress[]
+  Course           Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  User             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+enum Role {
+  USER
+  MOD
+  ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+}
