@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { AIQuestionGenerator } from "@/components/courses/AIQuestionGenerator";
 
 interface Chapter {
   id: string;
@@ -324,23 +325,32 @@ export default function EditChapterPage() {
 
             {/* Questions */}
             <div>
-              <Card className="shadow-xl">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
-                      Câu hỏi ({chapter.questions.length})
+              <Card className="shadow-xl border-2 border-amber-200 vintage-card">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <CardTitle className="text-lg text-amber-900 font-headline">
+                      📝 Câu hỏi Warm-up ({chapter.questions.length})
                     </CardTitle>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        router.push(
-                          `/admin/courses/${courseId}/chapters/${chapterId}/questions/create`
-                        )
-                      }
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Thêm
-                    </Button>
+                    <div className="flex gap-2">
+                      <AIQuestionGenerator
+                        courseId={courseId as string}
+                        chapterId={chapterId as string}
+                        chapterTitle={chapter.title}
+                        onQuestionsGenerated={loadChapter}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          router.push(
+                            `/admin/courses/${courseId}/chapters/${chapterId}/questions/create`
+                          )
+                        }
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Thêm thủ công
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>

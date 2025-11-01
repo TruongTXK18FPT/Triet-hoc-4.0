@@ -93,6 +93,11 @@ export async function POST(
       (completedChapters / totalChapters) * 100
     );
 
+    const wasCompleted = await prisma.courseProgress.findUnique({
+      where: { id: courseProgressId },
+      select: { completedPercent: true },
+    });
+
     await prisma.courseProgress.update({
       where: {
         id: courseProgressId,
@@ -101,6 +106,83 @@ export async function POST(
         completedPercent: newCompletedPercent,
       },
     });
+
+    // Award XP for chapter completion
+    try {
+      const { calculateLevel, calculateRank } = await import('@/lib/gamification');
+      
+      // Get or create user profile
+      let profile = await (prisma as any).userProfile.findUnique({
+        where: { userId: session.user.id },
+      });
+
+      if (!profile) {
+        profile = await (prisma as any).userProfile.create({
+          data: { userId: session.user.id },
+        });
+      }
+
+      // Award XP for chapter completion (50 XP)
+      const chapterXp = 50;
+      let newXp = profile.experience + chapterXp;
+      
+      // Create chapter activity
+      await (prisma as any).userActivity.create({
+        data: {
+          userId: profile.id,
+          type: 'CHAPTER_COMPLETED',
+          description: `Hoàn thành chương: ${chapter.title}`,
+          xpEarned: chapterXp,
+        },
+      });
+
+      // Check if course is now completed (100%)
+      const courseJustCompleted = wasCompleted && wasCompleted.completedPercent < 100 && newCompletedPercent === 100;
+      
+      if (courseJustCompleted) {
+        // Award bonus XP for course completion (500 XP)
+        const courseXp = 500;
+        newXp += courseXp;
+
+        // Get course info
+        const course = await prisma.course.findUnique({
+          where: { id: courseId },
+          select: { title: true },
+        });
+
+        // Create course completion activity
+        await (prisma as any).userActivity.create({
+          data: {
+            userId: profile.id,
+            type: 'COURSE_COMPLETED',
+            description: `Hoàn thành khóa học: ${course?.title || 'Unknown'}`,
+            xpEarned: courseXp,
+          },
+        });
+
+        console.log(`🎉 User completed course! Awarded ${courseXp} bonus XP`);
+      }
+
+      // Calculate new level and rank
+      const newLevel = calculateLevel(newXp);
+      const newRank = calculateRank(newXp);
+
+      // Update profile
+      await (prisma as any).userProfile.update({
+        where: { id: profile.id },
+        data: {
+          experience: newXp,
+          level: newLevel,
+          rank: newRank,
+          ...(courseJustCompleted && { coursesCompleted: { increment: 1 } }),
+        },
+      });
+
+      console.log(`✅ Awarded XP for chapter completion (total: ${courseJustCompleted ? chapterXp + 500 : chapterXp} XP)`);
+    } catch (error) {
+      console.error('Failed to award XP for chapter/course completion:', error);
+      // Don't fail the completion if XP award fails
+    }
 
     return NextResponse.json({
       success: true,

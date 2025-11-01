@@ -212,4 +212,93 @@
       transform: translateY(0);
     }
   }
+
+  /* Vintage Styles */
+  .vintage-card {
+    @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
+    background: linear-gradient(135deg, #fefefe 0%, #faf8f6 100%);
+  }
+
+  .vintage-badge {
+    @apply shadow-sm font-semibold;
+    letter-spacing: 0.025em;
+  }
+
+  .vintage-badge-complete {
+    animation: pulse-amber 2s ease-in-out infinite;
+  }
+
+  .vintage-badge-progress {
+    animation: pulse-blue 2s ease-in-out infinite;
+  }
+
+  .vintage-badge-new {
+    @apply hover:shadow-md hover:scale-105 transition-all duration-200;
+  }
+
+  .vintage-checkmark-complete {
+    @apply ring-4 ring-amber-200/50;
+    animation: bounce-once 0.6s ease-out;
+  }
+
+  .vintage-checkmark-empty {
+    @apply hover:scale-110 hover:border-amber-400 transition-all duration-200;
+  }
+
+  .vintage-input {
+    @apply focus:ring-2 focus:ring-amber-400 focus:ring-offset-2;
+  }
+
+  .vintage-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .vintage-scrollbar::-webkit-scrollbar-track {
+    @apply bg-amber-50 rounded-full;
+  }
+
+  .vintage-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-amber-400 rounded-full hover:bg-amber-500;
+  }
+
+  @keyframes pulse-amber {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+    }
+  }
+
+  @keyframes pulse-blue {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    }
+  }
+
+  @keyframes bounce-once {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 3s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 }
+

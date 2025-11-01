@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/footer';
 import { Hero } from '@/components/home/hero';
 import { Mission } from '@/components/home/mission';
 import { Features } from '@/components/home/features';
+import { BlogPreview } from '@/components/home/blog-preview';
 import { TimelinePreview } from '@/components/home/timeline-preview';
 import { Testimonials } from '@/components/home/testimonials';
 
@@ -14,6 +15,7 @@ export default function Home() {
         <Hero />
         <Mission />
         <Features />
+        <BlogPreview />
         <TimelinePreview />
         <Testimonials />
       </main>

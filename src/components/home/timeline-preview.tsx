@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -19,16 +19,35 @@ import {
 } from '@/components/ui/dialog';
 import { explainConcept } from '@/ai/flows/explain-philosophical-concepts';
 import type { ExplainConceptOutput } from '@/ai/flows/explain-philosophical-concepts';
-import { timelineEvents, type TimelineEvent } from '@/lib/timeline-events';
+import type { TimelineEvent } from '@/lib/timeline-events';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import Link from 'next/link';
 
 export function TimelinePreview() {
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [explanation, setExplanation] = useState<ExplainConceptOutput | null>(null);
   const [isPending, startTransition] = useTransition();
+  
+  useEffect(() => {
+    async function fetchTimelineEvents() {
+      try {
+        const res = await fetch('/api/timeline');
+        if (res.ok) {
+          const events = await res.json();
+          setTimelineEvents(events);
+        }
+      } catch (error) {
+        console.error('Error fetching timeline events:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTimelineEvents();
+  }, []);
   
   // Get first 6 events for preview
   const previewEvents = timelineEvents.slice(0, 6);
@@ -53,6 +72,17 @@ export function TimelinePreview() {
           </p>
         </div>
 
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : previewEvents.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-lg text-muted-foreground mb-6">
+              Chưa có sự kiện timeline nào.
+            </p>
+          </div>
+        ) : (
         <Carousel className="w-full max-w-6xl mx-auto animate-fade-in-up">
           <CarouselContent className="-ml-4">
             {previewEvents.map((event) => (
@@ -79,6 +109,7 @@ export function TimelinePreview() {
           <CarouselPrevious className="hidden md:flex" />
           <CarouselNext className="hidden md:flex" />
         </Carousel>
+        )}
         <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline">
                 <Link href="/timeline">Xem Toàn Bộ Dòng Thời Gian</Link>

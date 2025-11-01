@@ -8,7 +8,7 @@
  * - VuaTrietAIOutput - The return type for the chat function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, aiFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const VuaTrietAIInputSchema = z.object({
@@ -22,10 +22,7 @@ const VuaTrietAIOutputSchema = z.object({
 });
 export type VuaTrietAIOutput = z.infer<typeof VuaTrietAIOutputSchema>;
 
-export async function chatWithVuaTrietAI(input: VuaTrietAIInput): Promise<VuaTrietAIOutput> {
-  return vuaTrietAIFlow(input);
-}
-
+// Define flows first
 const vuaTrietAIFlow = ai.defineFlow(
   {
     name: 'vuaTrietAIFlow',
@@ -77,3 +74,78 @@ CẤU TRÚC TRẢ LỜI
     return { response: response.text };
   }
 );
+
+// Fallback flow using Gemini 2.0
+const vuaTrietAIFlowFallback = aiFallback.defineFlow(
+  {
+    name: 'vuaTrietAIFlowFallback',
+    inputSchema: VuaTrietAIInputSchema,
+    outputSchema: VuaTrietAIOutputSchema,
+  },
+  async (input) => {
+    const { history } = input;
+
+    const system = `Bạn là "Vua Triết AI" (King of Philosophy AI) — một nhà triết học và nhà giáo dục AI chuyên sâu về Chủ nghĩa Mác–Lênin: Triết học (phép biện chứng và lịch sử), Kinh tế chính trị, và Chủ nghĩa xã hội khoa học.
+
+NGÔN NGỮ
+- Luôn trả lời bằng tiếng Việt (trừ khi người dùng yêu cầu rõ ràng ngôn ngữ khác).
+
+SỨ MỆNH CỐT LÕI
+- Giảng giải, làm rõ các nguyên lý, khái niệm, bối cảnh lịch sử của Mác–Lênin.
+- Nội dung trọng tâm: cuộc đời và đóng góp của Marx, Engels, Lenin; phép biện chứng và duy vật lịch sử; kinh tế chính trị Mác–Lênin; chủ nghĩa xã hội khoa học và ứng dụng hiện đại; mối liên hệ với Tư tưởng Hồ Chí Minh trong bối cảnh Việt Nam.
+
+PHONG CÁCH
+- Uyên bác, gần gũi, khuyến khích tư duy phản biện; dùng ví dụ lịch sử/đời sống; thỉnh thoảng trích dẫn ngắn.
+
+QUY TẮC DANH TÍNH
+- Khi được hỏi về danh tính, trả lời: "Ta là Vua Triết AI – một trí tuệ nhân tạo được tạo ra để giúp sinh viên khám phá thế giới triết học, kinh tế học và chủ nghĩa xã hội khoa học Mác–Lênin. Ta không chỉ giảng giải lý thuyết, mà còn giúp con hiểu bản chất con người và quy luật vận động của xã hội qua lăng kính khoa học và nhân văn."
+
+CẤU TRÚC TRẢ LỜI
+1) Chào và công nhận câu hỏi.
+2) Giải thích khái niệm.
+3) Đào sâu triết học (biện chứng, lịch sử, kinh tế).
+4) Kết nối thực tiễn (đời sống/Việt Nam).
+5) Khuyến khích suy nghĩ thêm.`;
+
+    const convo = history
+      .map((m: any) => {
+        const role: string = (m?.role ?? '').toString();
+        const contentArray = Array.isArray(m?.content) ? m.content : [];
+        const text = contentArray.map((c: any) => c?.text).filter(Boolean).join('\n');
+        if (role === 'user') return `Người dùng: ${text}`;
+        if (role === 'model') return `Vua Triết AI: ${text}`;
+        return text ? `Hệ thống: ${text}` : '';
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    const prompt = `${system}\n\nCuộc trò chuyện:\n${convo}\n\nHãy trả lời vai "Vua Triết AI" theo đúng cấu trúc và phong cách trên.`;
+
+    const response = await aiFallback.generate(prompt);
+    
+    return { response: response.text };
+  }
+);
+
+export async function chatWithVuaTrietAI(input: VuaTrietAIInput): Promise<VuaTrietAIOutput> {
+  try {
+    return await vuaTrietAIFlow(input);
+  } catch (error: any) {
+    const isQuotaError = 
+      error?.message?.includes('quota') ||
+      error?.message?.includes('429') ||
+      error?.code === 'RESOURCE_EXHAUSTED' ||
+      error?.statusCode === 429;
+    
+    if (isQuotaError) {
+      console.warn('⚠️ Gemini 2.5 quota exceeded for chatbot, falling back to 2.0 flash...');
+      try {
+        return await vuaTrietAIFlowFallback(input);
+      } catch (fallbackError) {
+        console.error('❌ Chatbot fallback failed:', fallbackError);
+        throw new Error('AI chatbot temporarily unavailable. Please try again later.');
+      }
+    }
+    throw error;
+  }
+}

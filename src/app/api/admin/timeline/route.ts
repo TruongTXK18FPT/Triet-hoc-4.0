@@ -4,40 +4,112 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-const schema = z.object({
-  year: z.string().min(1),
+const createSchema = z.object({
+  year: z.union([z.string(), z.number()]).transform((val) => Number.parseInt(String(val))),
   title: z.string().min(3),
   description: z.string().min(10),
+  sourceUrl: z.string().url().optional().or(z.literal('')),
 });
 
-export async function POST(req: NextRequest) {
+const updateSchema = z.object({
+  year: z.union([z.string(), z.number()]).transform((val) => Number.parseInt(String(val))).optional(),
+  title: z.string().min(3).optional(),
+  summary: z.string().min(10).optional(),
+  description: z.string().min(10).optional(), // Alias for summary
+  sourceUrl: z.string().url().optional().or(z.literal('')).optional(),
+  order: z.number().optional(),
+});
+
+function checkAdmin(session: any) {
+  return session?.user?.email === 'admin@mln131.com' || session?.user?.role === 'ADMIN';
+}
+
+// GET - Lấy tất cả timeline events
+export async function GET() {
   const session = await getServerSession(authOptions);
-  if (session?.user?.email !== 'admin@mln131.com') {
+  if (!checkAdmin(session)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json();
-  const parsed = schema.safeParse(body);
+  try {
+    const events = await prisma.timelineEvent.findMany({
+      orderBy: [
+        { year: 'asc' },
+        { order: 'asc' },
+      ],
+    });
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
+    // Transform to match TimelineEvent type
+    const transformed = events.map((event) => ({
+      id: event.id,
+      year: event.year.toString(),
+      title: event.title,
+      description: event.summary,
+      sourceUrl: event.sourceUrl,
+      order: event.order,
+    }));
+
+    return NextResponse.json(transformed);
+  } catch (error) {
+    console.error('Error fetching timeline events:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch timeline events' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Tạo timeline event mới
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!checkAdmin(session)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { year, title, description } = parsed.data;
+  try {
+    const body = await req.json();
+    const parsed = createSchema.safeParse(body);
 
-  const maxOrder = await prisma.timelineEvent.findFirst({
-    orderBy: { order: 'desc' },
-    select: { order: true },
-  });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
-  await prisma.timelineEvent.create({
-    data: {
-      year: parseInt(year),
-      title,
-      summary: description,
-      order: (maxOrder?.order || 0) + 1,
-    },
-  });
+    const { year, title, description, sourceUrl } = parsed.data;
 
-  return NextResponse.json({ success: true });
+    const maxOrder = await prisma.timelineEvent.findFirst({
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    });
+
+    const event = await prisma.timelineEvent.create({
+      data: {
+        year,
+        title,
+        summary: description,
+        sourceUrl: sourceUrl || null,
+        order: (maxOrder?.order || 0) + 1,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      event: {
+        id: event.id,
+        year: event.year.toString(),
+        title: event.title,
+        description: event.summary,
+        sourceUrl: event.sourceUrl,
+        order: event.order,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating timeline event:', error);
+    return NextResponse.json(
+      { error: 'Failed to create timeline event' },
+      { status: 500 }
+    );
+  }
 }

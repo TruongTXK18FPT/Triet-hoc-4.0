@@ -26,6 +26,7 @@ model User {
   reviews        Review[]
   roadmaps       Roadmap[]
   sessions       Session[]
+  profile        UserProfile?
 }
 
 model Post {
@@ -304,4 +305,100 @@ enum PostStatus {
   PENDING
   PUBLISHED
   REJECTED
+}
+
+// ==================== GAMIFICATION MODELS ====================
+
+model UserProfile {
+  id               String          @id @default(cuid())
+  userId           String          @unique
+  level            Int             @default(1)
+  experience       Int             @default(0)
+  rank             Rank            @default(BRONZE)
+  totalStudyTime   Int             @default(0) // in minutes
+  coursesCompleted Int             @default(0)
+  quizzesCompleted Int             @default(0)
+  blogsCreated     Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badges           UserBadge[]
+  activities       UserActivity[]
+
+  @@index([userId])
+  @@index([experience])
+  @@index([rank])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+  description String
+  icon        String // emoji or icon name
+  category    BadgeCategory
+  requirement String // Description of how to earn
+  xpReward    Int         @default(0)
+  createdAt   DateTime  @default(now())
+  users       UserBadge[]
+
+  @@index([category])
+}
+
+model UserBadge {
+  id        String      @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime    @default(now())
+  profile   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge       @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model UserActivity {
+  id          String       @id @default(cuid())
+  userId      String
+  type        ActivityType
+  description String
+  xpEarned    Int          @default(0)
+  metadata    Json? // Extra data like courseId, quizId, etc.
+  createdAt   DateTime     @default(now())
+  profile     UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum Rank {
+  BRONZE
+  SILVER
+  GOLD
+  DIAMOND
+  MASTER
+}
+
+enum BadgeCategory {
+  LEARNING      // Learning related badges
+  QUIZ          // Quiz achievements
+  BLOG          // Blog writing
+  COURSE        // Course completion
+  SOCIAL        // Community engagement
+  SPECIAL       // Special achievements
+}
+
+enum ActivityType {
+  COURSE_STARTED
+  COURSE_COMPLETED
+  CHAPTER_COMPLETED
+  QUIZ_COMPLETED
+  QUIZ_PERFECT_SCORE
+  BLOG_CREATED
+  BLOG_PUBLISHED
+  COMMENT_POSTED
+  STUDY_STREAK
+  DAILY_LOGIN
 }

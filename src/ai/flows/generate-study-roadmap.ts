@@ -8,9 +8,10 @@
  * - GenerateStudyRoadmapOutput - The return type for the generateStudyRoadmap function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, aiFallback} from '@/ai/genkit';
 import 'dotenv/config';
 import {z} from 'genkit';
+import { callAIWithFallback } from '@/ai/fallback-helper';
 
 const GenerateStudyRoadmapInputSchema = z.object({
   knowledgeLevel: z
@@ -31,52 +32,6 @@ export async function generateStudyRoadmap(input: GenerateStudyRoadmapInput): Pr
   return generateStudyRoadmapFlow(input);
 }
 
-// Helper: call Mistral API for roadmap (uses MISTRAL_API_KEY)
-async function callMistralRoadmap(promptText: string): Promise<string> {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing MISTRAL_API_KEY');
-  }
-  
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-  
-  try {
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'mistral-large-latest',
-        messages: [
-          { role: 'system', content: 'Bạn là chuyên gia về Chủ nghĩa Mác–Lênin và là nhà giáo có kinh nghiệm. Luôn trả lời bằng tiếng Việt, văn phong mạch lạc, sắp xếp theo mục dễ đọc.' },
-          { role: 'user', content: promptText },
-        ],
-        temperature: 0.4,
-      }),
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`Mistral error: ${response.status} ${detail}`);
-    }
-    const data = await response.json() as any;
-    const text: string = data?.choices?.[0]?.message?.content ?? '';
-    return text;
-  } catch (error: any) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('Mistral API timeout - vui lòng thử lại');
-    }
-    throw error;
-  }
-}
-
 const generateStudyRoadmapFlow = ai.defineFlow(
   {
     name: 'generateStudyRoadmapFlow',
@@ -84,6 +39,8 @@ const generateStudyRoadmapFlow = ai.defineFlow(
     outputSchema: GenerateStudyRoadmapOutputSchema,
   },
   async input => {
+    const systemPrompt = 'Bạn là chuyên gia về Chủ nghĩa Mác–Lênin và là nhà giáo có kinh nghiệm. Luôn trả lời bằng tiếng Việt, văn phong mạch lạc, sắp xếp theo mục dễ đọc.';
+    
     const promptText = `Hãy tạo LỘ TRÌNH HỌC TRIẾT MÁC–LÊNIN cá nhân hoá (5–10 mục) theo cấu trúc sau, trả về bằng văn bản thuần mỗi mục trên một dòng:
 1) [Tiêu đề ngắn gọn] — [Mô tả 1–2 câu] — [3 gợi ý tài liệu/link tham khảo nếu có]
 
@@ -95,7 +52,14 @@ Yêu cầu:
 - Trình bày dạng danh sách đánh số 1..n, mỗi mục một dòng.
 - Chủ đề gợi ý thuộc: phép biện chứng duy vật, duy vật lịch sử, kinh tế chính trị Mác–Lênin, CNXH khoa học, tư tưởng Hồ Chí Minh (liên hệ Việt Nam).
 - Gợi ý link ưu tiên: nguồn mở, bài giảng, thư viện, tác phẩm kinh điển (nếu không có link cụ thể thì ghi "(gợi ý: tìm đọc tác phẩm …)").`;
-    const roadmap = await callMistralRoadmap(promptText);
+    
+    const roadmap = await callAIWithFallback({
+      promptText,
+      systemPrompt,
+      temperature: 0.4,
+      maxTokens: 2048,
+    });
+    
     return { roadmap };
   }
 );

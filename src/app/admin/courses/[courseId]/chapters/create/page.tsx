@@ -9,8 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function CreateChapterPage() {
   const params = useParams();
@@ -166,6 +174,72 @@ export default function CreateChapterPage() {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // AI Question Generator state
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+
+  const handleAIGenerate = async () => {
+    const topic = aiTopic.trim() || formData.title || "Chủ đề triết học Mác-Lênin";
+    
+    setAiLoading(true);
+    try {
+      const response = await fetch("/api/ai/generate-questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate questions");
+      }
+
+      const data = await response.json();
+      const formattedQuestions = (data.questions || []).map((q: any) => ({
+        question: q.questionText,
+        options: q.options,
+        correctIndex: q.correctOptionIndex,
+        explanation: "",
+      }));
+      
+      setGeneratedQuestions(formattedQuestions);
+      toast({
+        title: "Thành công",
+        description: `Đã tạo ${formattedQuestions.length} câu hỏi bằng AI`,
+      });
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tạo câu hỏi. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAddGeneratedQuestion = (question: any, index: number) => {
+    setQuestions((prev) => [...prev, question]);
+    setGeneratedQuestions((prev) => prev.filter((_, i) => i !== index));
+    toast({
+      title: "Đã thêm",
+      description: "Câu hỏi đã được thêm vào form",
+    });
+  };
+
+  const handleAddAllGeneratedQuestions = () => {
+    setQuestions((prev) => [...prev, ...generatedQuestions]);
+    setGeneratedQuestions([]);
+    toast({
+      title: "Đã thêm tất cả",
+      description: `Đã thêm ${generatedQuestions.length} câu hỏi vào form`,
+    });
+  };
+
   if (!session?.user?.id || session.user.role !== "ADMIN") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -262,7 +336,7 @@ export default function CreateChapterPage() {
                     min="1"
                     value={formData.order}
                     onChange={(e) =>
-                      handleInputChange("order", parseInt(e.target.value) || 1)
+                      handleInputChange("order", Number.parseInt(e.target.value) || 1)
                     }
                     placeholder="1"
                   />
@@ -270,20 +344,178 @@ export default function CreateChapterPage() {
 
                 {/* Questions Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
                     <Label className="text-lg font-semibold">
                       Câu hỏi Warm-up
                     </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addQuestion}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Thêm câu hỏi
-                    </Button>
+                    <div className="flex gap-2">
+                      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 border-2 border-amber-600 text-amber-700 hover:bg-amber-50"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Tạo bằng AI
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-headline text-amber-900 flex items-center gap-2">
+                              <Sparkles className="w-5 h-5" />
+                              AI Tạo Câu Hỏi Warm-up
+                            </DialogTitle>
+                            <DialogDescription>
+                              Sử dụng AI để tự động tạo câu hỏi trắc nghiệm cho chương này
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="space-y-6 py-4">
+                            <div className="space-y-3 bg-amber-50/50 p-4 rounded-lg border-2 border-amber-200">
+                              <Label htmlFor="ai-topic" className="text-amber-900 font-semibold">
+                                Chủ đề câu hỏi (tùy chọn)
+                              </Label>
+                              <Textarea
+                                id="ai-topic"
+                                value={aiTopic}
+                                onChange={(e) => setAiTopic(e.target.value)}
+                                placeholder={`Ví dụ: Phép biện chứng duy vật của Marx, Lịch sử triết học Mác-Lênin...
+                                
+Để trống sẽ dùng tiêu đề chương: "${formData.title || "Chủ đề triết học Mác-Lênin"}"`}
+                                rows={4}
+                                className="border-amber-300 focus:border-amber-500"
+                                disabled={aiLoading || generatedQuestions.length > 0}
+                              />
+                              <div className="flex gap-3">
+                                <Button
+                                  onClick={handleAIGenerate}
+                                  disabled={aiLoading || generatedQuestions.length > 0}
+                                  className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
+                                >
+                                  {aiLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      AI đang suy nghĩ...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-4 h-4 mr-2" />
+                                      Tạo 5 câu hỏi
+                                    </>
+                                  )}
+                                </Button>
+                                {generatedQuestions.length > 0 && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      onClick={handleAddAllGeneratedQuestions}
+                                      className="border-green-600 text-green-700 hover:bg-green-50"
+                                    >
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Thêm tất cả ({generatedQuestions.length})
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setGeneratedQuestions([]);
+                                        setAiTopic("");
+                                      }}
+                                      className="border-amber-600 text-amber-700"
+                                    >
+                                      Tạo lại
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {generatedQuestions.length > 0 && (
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-amber-900">
+                                  Câu hỏi đã tạo ({generatedQuestions.length})
+                                </h3>
+
+                                {generatedQuestions.map((q, index) => (
+                                  <div
+                                    key={index}
+                                    className="bg-white border-2 border-amber-300 rounded-lg p-4 shadow-md"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-sm">
+                                            {index + 1}
+                                          </span>
+                                          <h4 className="font-semibold text-amber-900">
+                                            {q.question}
+                                          </h4>
+                                        </div>
+
+                                        <div className="space-y-2 ml-10">
+                                          {q.options.map((option: string, optIndex: number) => (
+                                            <div
+                                              key={optIndex}
+                                              className={`flex items-center gap-2 p-2 rounded ${
+                                                optIndex === q.correctIndex
+                                                  ? "bg-green-50 border border-green-300"
+                                                  : "bg-slate-50"
+                                              }`}
+                                            >
+                                              <span className="font-bold text-sm text-slate-700 min-w-[24px]">
+                                                {String.fromCharCode(65 + optIndex)}.
+                                              </span>
+                                              <span className="text-sm">{option}</span>
+                                              {optIndex === q.correctIndex && (
+                                                <span className="ml-auto text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
+                                                  ✓ Đúng
+                                                </span>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleAddGeneratedQuestion(q, index)}
+                                        className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                                      >
+                                        <Plus className="w-4 h-4 mr-1" />
+                                        Thêm
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {!aiLoading && generatedQuestions.length === 0 && (
+                              <div className="text-center py-12 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border-2 border-dashed border-amber-300">
+                                <Sparkles className="w-16 h-16 mx-auto text-amber-400 mb-4" />
+                                <p className="text-slate-600 text-lg">
+                                  Nhập chủ đề và nhấn <strong>Tạo câu hỏi</strong>
+                                </p>
+                                <p className="text-sm text-slate-500 mt-2">
+                                  AI sẽ tạo 5 câu hỏi trắc nghiệm chất lượng cao
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addQuestion}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Thêm thủ công
+                      </Button>
+                    </div>
                   </div>
 
                   {questions.map((question, questionIndex) => (

@@ -47,12 +47,15 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [crosswordGames, setCrosswordGames] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTimeline, setNewTimeline] = useState({
     year: "",
     title: "",
     description: "",
+    sourceUrl: "",
   });
+  const [editingTimeline, setEditingTimeline] = useState<any | null>(null);
 
   useEffect(() => {
     if (
@@ -80,6 +83,7 @@ export default function AdminDashboard() {
         reviewsRes,
         crosswordRes,
         coursesRes,
+        timelineRes,
       ] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/posts"),
@@ -88,6 +92,7 @@ export default function AdminDashboard() {
         fetch("/api/review?limit=100"),
         fetch("/api/crossword"),
         fetch("/api/admin/courses"),
+        fetch("/api/admin/timeline"),
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
@@ -100,6 +105,7 @@ export default function AdminDashboard() {
       }
       if (crosswordRes.ok) setCrosswordGames(await crosswordRes.json());
       if (coursesRes.ok) setCourses(await coursesRes.json());
+      if (timelineRes.ok) setTimelineEvents(await timelineRes.json());
     } catch (error) {
       console.error("Error loading admin data:", error);
     } finally {
@@ -157,17 +163,101 @@ export default function AdminDashboard() {
       const res = await fetch("/api/admin/timeline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTimeline),
+        body: JSON.stringify({
+          year: newTimeline.year,
+          title: newTimeline.title,
+          description: newTimeline.description,
+          sourceUrl: newTimeline.sourceUrl || undefined,
+        }),
       });
 
       if (res.ok) {
         toast({ title: "Đã thêm sự kiện timeline" });
-        setNewTimeline({ year: "", title: "", description: "" });
+        setNewTimeline({ year: "", title: "", description: "", sourceUrl: "" });
+        loadData();
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Lỗi",
+          description: error.error || "Không thể thêm timeline",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({
         title: "Lỗi",
         description: "Không thể thêm timeline",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditTimeline = async () => {
+    if (!editingTimeline || !editingTimeline.year || !editingTimeline.title || !editingTimeline.description) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng điền đầy đủ thông tin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/timeline/${editingTimeline.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: editingTimeline.year,
+          title: editingTimeline.title,
+          description: editingTimeline.description,
+          sourceUrl: editingTimeline.sourceUrl || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        toast({ title: "Đã cập nhật sự kiện timeline" });
+        setEditingTimeline(null);
+        loadData();
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Lỗi",
+          description: error.error || "Không thể cập nhật timeline",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật timeline",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTimeline = async (id: string) => {
+    if (!confirm("Bạn có chắc muốn xóa sự kiện timeline này?")) return;
+
+    try {
+      const res = await fetch(`/api/admin/timeline/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast({ title: "Đã xóa sự kiện timeline" });
+        loadData();
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Lỗi",
+          description: error.error || "Không thể xóa timeline",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa timeline",
         variant: "destructive",
       });
     }
@@ -336,7 +426,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users">Quản lý Users</TabsTrigger>
             <TabsTrigger value="quizzes">Quản lý Quizzes</TabsTrigger>
             <TabsTrigger value="reviews">Quản lý Reviews</TabsTrigger>
-            <TabsTrigger value="timeline">Thêm Timeline</TabsTrigger>
+            <TabsTrigger value="timeline">Quản lý Timeline</TabsTrigger>
             <TabsTrigger value="crossword">Trò chơi Crossword</TabsTrigger>
             <TabsTrigger value="courses">Quản lý Khóa học</TabsTrigger>
           </TabsList>
@@ -465,60 +555,182 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="timeline">
-            <Card className="shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
-                <CardTitle>Thêm sự kiện Timeline mới</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Năm
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="VD: 1848"
-                    value={newTimeline.year}
-                    onChange={(e) =>
-                      setNewTimeline({ ...newTimeline, year: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Tiêu đề
-                  </label>
-                  <Input
-                    placeholder="VD: Tuyên ngôn của Đảng Cộng sản"
-                    value={newTimeline.title}
-                    onChange={(e) =>
-                      setNewTimeline({ ...newTimeline, title: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Mô tả
-                  </label>
-                  <Textarea
-                    placeholder="Mô tả chi tiết sự kiện..."
-                    value={newTimeline.description}
-                    onChange={(e) =>
-                      setNewTimeline({
-                        ...newTimeline,
-                        description: e.target.value,
-                      })
-                    }
-                    rows={4}
-                  />
-                </div>
-                <Button
-                  onClick={handleAddTimeline}
-                  className="w-full bg-[#44392d] hover:bg-[#5a4a3a]"
-                >
-                  Thêm Timeline
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Form thêm/sửa */}
+              <Card className="shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                  <CardTitle>
+                    {editingTimeline ? "Sửa sự kiện Timeline" : "Thêm sự kiện Timeline mới"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Năm *
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="VD: 1848"
+                      value={editingTimeline?.year || newTimeline.year}
+                      onChange={(e) => {
+                        if (editingTimeline) {
+                          setEditingTimeline({ ...editingTimeline, year: e.target.value });
+                        } else {
+                          setNewTimeline({ ...newTimeline, year: e.target.value });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Tiêu đề *
+                    </label>
+                    <Input
+                      placeholder="VD: Tuyên ngôn của Đảng Cộng sản"
+                      value={editingTimeline?.title || newTimeline.title}
+                      onChange={(e) => {
+                        if (editingTimeline) {
+                          setEditingTimeline({ ...editingTimeline, title: e.target.value });
+                        } else {
+                          setNewTimeline({ ...newTimeline, title: e.target.value });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Mô tả *
+                    </label>
+                    <Textarea
+                      placeholder="Mô tả chi tiết sự kiện..."
+                      value={editingTimeline?.description || newTimeline.description}
+                      onChange={(e) => {
+                        if (editingTimeline) {
+                          setEditingTimeline({ ...editingTimeline, description: e.target.value });
+                        } else {
+                          setNewTimeline({ ...newTimeline, description: e.target.value });
+                        }
+                      }}
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Link nguồn (tùy chọn)
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com"
+                      value={editingTimeline?.sourceUrl || newTimeline.sourceUrl}
+                      onChange={(e) => {
+                        if (editingTimeline) {
+                          setEditingTimeline({ ...editingTimeline, sourceUrl: e.target.value });
+                        } else {
+                          setNewTimeline({ ...newTimeline, sourceUrl: e.target.value });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    {editingTimeline ? (
+                      <>
+                        <Button
+                          onClick={handleEditTimeline}
+                          className="flex-1 bg-[#44392d] hover:bg-[#5a4a3a]"
+                        >
+                          Cập nhật
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setEditingTimeline(null);
+                            setNewTimeline({ year: "", title: "", description: "", sourceUrl: "" });
+                          }}
+                          variant="outline"
+                        >
+                          Hủy
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        onClick={handleAddTimeline}
+                        className="w-full bg-[#44392d] hover:bg-[#5a4a3a]"
+                      >
+                        Thêm Timeline
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Danh sách timeline events */}
+              <Card className="shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                  <CardTitle>Danh sách sự kiện Timeline ({timelineEvents.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    {timelineEvents.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        Chưa có sự kiện timeline nào
+                      </div>
+                    ) : (
+                      timelineEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="p-4 rounded-lg border-2 border-slate-200 bg-white hover:shadow-md transition-all"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="text-lg font-bold">
+                                  {event.year}
+                                </Badge>
+                                <h3 className="font-semibold text-lg text-slate-900">
+                                  {event.title}
+                                </h3>
+                              </div>
+                              <p className="text-sm text-slate-600 mt-1">
+                                {event.description}
+                              </p>
+                              {event.sourceUrl && (
+                                <a
+                                  href={event.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                                >
+                                  {event.sourceUrl}
+                                </a>
+                              )}
+                              <Badge variant="outline" className="mt-2">
+                                Thứ tự: {event.order}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingTimeline(event)}
+                              >
+                                Sửa
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteTimeline(event.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Xóa
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="reviews">
