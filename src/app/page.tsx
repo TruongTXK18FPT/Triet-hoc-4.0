@@ -6,6 +6,7 @@ import { Features } from '@/components/home/features';
 import { BlogPreview } from '@/components/home/blog-preview';
 import { TimelinePreview } from '@/components/home/timeline-preview';
 import { Testimonials } from '@/components/home/testimonials';
+import { CheckInButton } from '@/components/gamification/CheckInButton';
 
 export default function Home() {
   return (
@@ -13,6 +14,12 @@ export default function Home() {
       <Header />
       <main className="flex-grow">
         <Hero />
+        {/* Check-in Section */}
+        <section className="container mx-auto px-4 py-8 md:py-12">
+          <div className="max-w-md mx-auto">
+            <CheckInButton />
+          </div>
+        </section>
         <Mission />
         <Features />
         <BlogPreview />

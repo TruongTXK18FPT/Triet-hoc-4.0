@@ -59,6 +59,7 @@ export const XP_REWARDS = {
   COMMENT_POSTED: 20,
   STUDY_STREAK: 50,
   DAILY_LOGIN: 10,
+  DAILY_CHECKIN: 50, // Điểm danh hàng ngày
 };
 
 export const INITIAL_BADGES = [
@@ -194,13 +195,22 @@ export function calculateLevel(xp: number): number {
   return level;
 }
 
-// Calculate rank from XP
-export function calculateRank(xp: number): RankType {
-  if (xp >= RANK_THRESHOLDS.MASTER) return 'MASTER';
-  if (xp >= RANK_THRESHOLDS.DIAMOND) return 'DIAMOND';
-  if (xp >= RANK_THRESHOLDS.GOLD) return 'GOLD';
-  if (xp >= RANK_THRESHOLDS.SILVER) return 'SILVER';
+// Calculate rank from level (not XP)
+// Level 1-2 -> Đồng (BRONZE)
+// Level 3-9 -> Bạc (SILVER)
+// Level 10-19 -> Vàng (GOLD)
+// Level 20+ -> Kim cương (DIAMOND)
+export function calculateRankFromLevel(level: number): RankType {
+  if (level >= 20) return 'DIAMOND';
+  if (level >= 10) return 'GOLD';
+  if (level >= 3) return 'SILVER'; // Level 3 là rank Silver
   return 'BRONZE';
+}
+
+// Calculate rank from XP (legacy, kept for backward compatibility)
+export function calculateRank(xp: number): RankType {
+  const level = calculateLevel(xp);
+  return calculateRankFromLevel(level);
 }
 
 // Get XP needed for next level

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
-import { calculateLevel, calculateRank, XP_REWARDS } from '@/lib/gamification';
+import { calculateLevel, calculateRankFromLevel, XP_REWARDS } from '@/lib/gamification';
 
 // Get or create user profile
 export async function GET(req: NextRequest) {
@@ -52,12 +52,19 @@ export async function GET(req: NextRequest) {
         }),
       ]);
 
+      // Calculate initial level and rank
+      const initialXp = 0;
+      const initialLevel = calculateLevel(initialXp);
+      const initialRank = calculateRankFromLevel(initialLevel);
+
       const profile = await (prisma as any).userProfile.create({
         data: {
           userId: user.id,
           blogsCreated: blogsCount,
           quizzesCompleted: quizzesCount,
           coursesCompleted: coursesCount,
+          level: initialLevel,
+          rank: initialRank,
         },
         include: {
           user: {
@@ -89,13 +96,20 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    // Update profile with real counts
+    // Calculate level and rank from current XP
+    const currentXp = (user as any).profile.experience || 0;
+    const currentLevel = calculateLevel(currentXp);
+    const currentRank = calculateRankFromLevel(currentLevel);
+
+    // Update profile with real counts and sync level/rank
     const updatedProfile = await (prisma as any).userProfile.update({
       where: { id: (user as any).profile.id },
       data: {
         blogsCreated: blogsCount,
         quizzesCompleted: quizzesCount,
         coursesCompleted: coursesCount,
+        level: currentLevel,
+        rank: currentRank,
       },
       include: {
         badges: {
@@ -174,7 +188,7 @@ export async function POST(req: NextRequest) {
     const xpEarned = XP_REWARDS[activityType as keyof typeof XP_REWARDS];
     const newXp = profile.experience + xpEarned;
     const newLevel = calculateLevel(newXp);
-    const newRank = calculateRank(newXp);
+    const newRank = calculateRankFromLevel(newLevel); // Use level-based rank
 
     // Update profile stats
     const updateData: any = {

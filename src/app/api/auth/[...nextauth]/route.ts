@@ -49,14 +49,27 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      if (user) {
-        // Lấy role từ database thay vì hardcode
+      if (user?.email) {
+        // Lấy role và image từ database
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { role: true },
+          select: { role: true, image: true, name: true },
         });
-        token.role = dbUser?.role || "USER";
+        token.role = (dbUser?.role || "USER") as string;
         token.id = user.id;
+        token.image = dbUser?.image || user.image || null;
+        token.name = dbUser?.name || user.name || null;
+      } else if (token.email) {
+        // Refresh user data from database on each request
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { role: true, image: true, name: true },
+        });
+        if (dbUser) {
+          token.role = (dbUser.role || "USER") as string;
+          token.image = dbUser.image || null;
+          token.name = dbUser.name || null;
+        }
       }
       return token;
     },
@@ -64,6 +77,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).role = (token as any).role || "USER";
         (session.user as any).id = (token as any).id;
+        (session.user as any).image = (token as any).image || session.user.image || null;
+        (session.user as any).name = (token as any).name || session.user.name || null;
       }
       return session;
     },

@@ -15,7 +15,7 @@ export async function GET() {
       coverUrl: true,
       createdAt: true,
       publishedAt: true,
-      author: { select: { id: true, name: true, image: true } },
+      author: { select: { id: true, name: true, image: true, email: true } },
     },
   });
   return NextResponse.json(posts);

@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         timelineRes,
       ] = await Promise.all([
         fetch("/api/admin/stats"),
-        fetch("/api/admin/posts"),
+        fetch("/api/admin/posts"), // Get all posts
         fetch("/api/admin/users"),
         fetch("/api/admin/quizzes"),
         fetch("/api/review?limit=100"),
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
         {/* Tabs */}
         <Tabs defaultValue="posts" className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 bg-white shadow-md">
-            <TabsTrigger value="posts">Bài viết chờ duyệt</TabsTrigger>
+            <TabsTrigger value="posts">Quản lý Blog Posts</TabsTrigger>
             <TabsTrigger value="users">Quản lý Users</TabsTrigger>
             <TabsTrigger value="quizzes">Quản lý Quizzes</TabsTrigger>
             <TabsTrigger value="reviews">Quản lý Reviews</TabsTrigger>
@@ -434,53 +434,109 @@ export default function AdminDashboard() {
           <TabsContent value="posts">
             <Card className="shadow-xl">
               <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
-                <CardTitle>
-                  Bài viết chờ kiểm duyệt ({pendingPosts.length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    Quản lý Blog Posts
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={pendingPosts.length > 0 ? "default" : "outline"}
+                      onClick={() => loadData()}
+                    >
+                      Tất cả ({pendingPosts.length} chờ duyệt)
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {pendingPosts.length === 0 ? (
                     <p className="text-center text-slate-500 py-10">
-                      Không có bài viết nào chờ duyệt
+                      Không có bài viết nào
                     </p>
                   ) : (
-                    pendingPosts.map((post) => (
+                    pendingPosts.map((post: any) => (
                       <div
                         key={post.id}
                         className="p-4 rounded-lg border-2 border-slate-200 bg-white hover:shadow-md transition-all"
                       >
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg text-slate-900">
+                            <h3 className="font-semibold text-lg text-slate-900 mb-2">
                               {post.title}
                             </h3>
-                            <p className="text-sm text-slate-600 mt-1">
-                              Tác giả: {post.author.name} •{" "}
-                              {new Date(post.createdAt).toLocaleDateString(
-                                "vi-VN"
+                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                              <span>Tác giả: {post.author?.name || 'N/A'}</span>
+                              <span>•</span>
+                              <span>{new Date(post.createdAt).toLocaleDateString("vi-VN")}</span>
+                              {post._count?.comments !== undefined && (
+                                <>
+                                  <span>•</span>
+                                  <span>{post._count.comments} bình luận</span>
+                                </>
                               )}
-                            </p>
-                            <Badge variant="outline" className="mt-2">
-                              {post.status}
-                            </Badge>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant="outline">
+                                {post.status}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprovePost(post.id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Duyệt
-                            </Button>
+                          <div className="flex gap-2 flex-shrink-0">
+                            {post.status === 'PENDING' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprovePost(post.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Duyệt
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleRejectPost(post.id)}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Từ chối
+                                </Button>
+                              </>
+                            )}
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleRejectPost(post.id)}
+                              onClick={async () => {
+                                if (confirm('Bạn có chắc muốn xóa bài viết này?')) {
+                                  try {
+                                    const res = await fetch('/api/admin/posts', {
+                                      method: 'DELETE',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ postId: post.id }),
+                                    });
+                                    if (res.ok) {
+                                      toast({ title: 'Đã xóa bài viết' });
+                                      loadData();
+                                    } else {
+                                      toast({
+                                        title: 'Lỗi',
+                                        description: 'Không thể xóa bài viết',
+                                        variant: 'destructive',
+                                      });
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: 'Lỗi',
+                                      description: 'Không thể xóa bài viết',
+                                      variant: 'destructive',
+                                    });
+                                  }
+                                }
+                              }}
                             >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Từ chối
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Xóa
                             </Button>
                           </div>
                         </div>
