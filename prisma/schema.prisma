@@ -87,7 +87,8 @@ model Question {
   quizId  String
   prompt  String
   options Json
-  answer  Int
+  answer  Int    // Single answer (for backward compatibility)
+  answers Json?  // Multiple answers stored as JSON array
   quiz    Quiz   @relation(fields: [quizId], references: [id])
 }
 

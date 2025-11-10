@@ -12,9 +12,16 @@ const createQuizSchema = z.object({
     z.object({
       prompt: z.string().min(10, 'Câu hỏi cần có ít nhất 10 ký tự.'),
       options: z.array(z.string()).min(2).max(6),
-      answer: z.number().int().min(0),
+      answer: z.number().int().min(0).optional(),
+      answers: z.array(z.number().int().min(0)).optional(),
     })
   ).min(1, 'Quiz cần có ít nhất 1 câu hỏi.'),
+}).refine((data) => {
+  // Ensure each question has either answer or answers
+  return data.questions.every(q => q.answer !== undefined || (q.answers && q.answers.length > 0));
+}, {
+  message: 'Mỗi câu hỏi phải có ít nhất một đáp án đúng',
+  path: ['questions'],
 });
 
 export async function POST(req: NextRequest) {
@@ -45,7 +52,10 @@ export async function POST(req: NextRequest) {
           create: validatedData.questions.map((q) => ({
             prompt: q.prompt,
             options: q.options,
-            answer: q.answer,
+            // Use first answer as the main answer field
+            answer: q.answers && q.answers.length > 0 ? q.answers[0] : (q.answer ?? 0),
+            // Store all correct answers as JSON if multiple answers provided
+            answers: q.answers && q.answers.length > 0 ? q.answers : null,
           })),
         },
       },

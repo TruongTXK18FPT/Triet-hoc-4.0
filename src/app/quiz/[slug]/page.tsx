@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Redo, Loader2 } from 'lucide-react';
@@ -19,6 +20,7 @@ type Question = {
   prompt: string;
   options: string[];
   answer: number;
+  answers?: number[]; // Multiple correct answers support
 };
 
 type Quiz = {
@@ -32,7 +34,7 @@ type Quiz = {
 };
 
 type AnswersState = {
-  [questionId: string]: number; // index of selected option
+  [questionId: string]: number | number[]; // index of selected option(s)
 };
 
 export default function QuizPage() {
@@ -52,7 +54,22 @@ export default function QuizPage() {
   const calculateScore = useCallback(() => {
     if (!quiz) return 0;
     return quiz.questions.reduce((score, question) => {
-      return score + (answers[question.id] === question.answer ? 1 : 0);
+      const userAnswer = answers[question.id];
+
+      // Support both single and multiple correct answers
+      const correctAnswers = question.answers || [question.answer];
+
+      let isCorrect = false;
+      if (Array.isArray(userAnswer)) {
+        // User selected multiple answers - all must match
+        isCorrect = userAnswer.length === correctAnswers.length &&
+                   userAnswer.every(ans => correctAnswers.includes(ans));
+      } else if (userAnswer !== undefined) {
+        // User selected single answer
+        isCorrect = correctAnswers.includes(userAnswer);
+      }
+
+      return score + (isCorrect ? 1 : 0);
     }, 0);
   }, [quiz, answers]);
 
@@ -152,9 +169,25 @@ export default function QuizPage() {
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const selectedOption = answers[currentQuestion.id];
 
-  const handleOptionChange = (value: string) => {
-    const optionIndex = parseInt(value);
-    setAnswers({ ...answers, [currentQuestion.id]: optionIndex });
+  const handleOptionChange = (value: string | number, isMultiple: boolean = false) => {
+    const optionIndex = typeof value === 'string' ? parseInt(value) : value;
+
+    if (isMultiple) {
+      // Handle multiple selection
+      const current = (answers[currentQuestion.id] as number[]) || [];
+      let updated: number[];
+
+      if (current.includes(optionIndex)) {
+        updated = current.filter(idx => idx !== optionIndex);
+      } else {
+        updated = [...current, optionIndex];
+      }
+
+      setAnswers({ ...answers, [currentQuestion.id]: updated });
+    } else {
+      // Handle single selection
+      setAnswers({ ...answers, [currentQuestion.id]: optionIndex });
+    }
   };
 
   const goToNext = () => {
@@ -225,9 +258,20 @@ export default function QuizPage() {
                         <h3 className="font-semibold text-xl mb-4 text-center">Chi tiết câu trả lời</h3>
                         {quiz.questions.map((q, index) => {
                             const userAnswer = answers[q.id];
-                            const isCorrect = userAnswer === q.answer;
-                            const correctOptionText = q.options[q.answer];
-                            const userAnswerText = userAnswer !== undefined ? q.options[userAnswer] : null;
+                            const correctAnswers = q.answers || [q.answer];
+
+                            let isCorrect = false;
+                            if (Array.isArray(userAnswer)) {
+                              isCorrect = userAnswer.length === correctAnswers.length &&
+                                         userAnswer.every(ans => correctAnswers.includes(ans));
+                            } else if (userAnswer !== undefined) {
+                              isCorrect = correctAnswers.includes(userAnswer);
+                            }
+
+                            const correctAnswerTexts = correctAnswers.map(idx => q.options[idx]);
+                            const userAnswerTexts = Array.isArray(userAnswer)
+                              ? userAnswer.map(idx => q.options[idx])
+                              : (userAnswer !== undefined ? [q.options[userAnswer]] : null);
 
                             return (
                                 <div key={q.id} className={cn(
@@ -240,17 +284,17 @@ export default function QuizPage() {
                                     </p>
                                     {isCorrect ? (
                                         <p className="text-sm text-green-700 dark:text-green-400 flex items-center gap-2 ml-6">
-                                          <CheckCircle className="w-4 h-4 shrink-0"/> 
-                                          <span>Đúng: <strong>{userAnswerText}</strong></span>
+                                          <CheckCircle className="w-4 h-4 shrink-0"/>
+                                          <span>Đúng: <strong>{userAnswerTexts?.join(", ") || "Chưa trả lời"}</strong></span>
                                         </p>
                                     ) : (
                                         <div className="ml-6 space-y-1">
                                             <p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
-                                              <AlertCircle className="w-4 h-4 shrink-0"/> 
-                                              <span>Bạn chọn: <strong>{userAnswerText || "Chưa trả lời"}</strong></span>
+                                              <AlertCircle className="w-4 h-4 shrink-0"/>
+                                              <span>Bạn chọn: <strong>{userAnswerTexts?.join(", ") || "Chưa trả lời"}</strong></span>
                                             </p>
                                             <p className="text-sm text-green-700 dark:text-green-400">
-                                              Đáp án đúng: <strong>{correctOptionText}</strong>
+                                              Đáp án đúng: <strong>{correctAnswerTexts.join(", ")}</strong>
                                             </p>
                                         </div>
                                     )}
@@ -291,27 +335,61 @@ export default function QuizPage() {
           </CardHeader>
           <CardContent className="pt-8">
             <p className="text-xl font-semibold mb-8 leading-relaxed">{currentQuestion.prompt}</p>
-            <RadioGroup 
-              value={selectedOption !== undefined ? selectedOption.toString() : undefined} 
-              onValueChange={handleOptionChange}
-            >
-              <div className="space-y-4">
-                {currentQuestion.options.map((option, index) => (
-                  <Label
-                    key={index}
-                    className={cn(
+
+            {/* Check if question has multiple correct answers */}
+            {currentQuestion.answers && currentQuestion.answers.length > 1 ? (
+              <>
+                <CardDescription className="mb-4 text-base">
+                  ℹ️ Câu hỏi này có nhiều đáp án đúng. Hãy chọn tất cả các lựa chọn đúng.
+                </CardDescription>
+                <div className="space-y-4">
+                  {currentQuestion.options.map((option, index) => {
+                    const isSelected = Array.isArray(selectedOption) && selectedOption.includes(index);
+                    return (
+                      <Label
+                        key={index}
+                        className={cn(
+                          "flex items-start p-5 rounded-xl border-2 transition-all cursor-pointer",
+                          isSelected
+                            ? 'bg-primary/10 border-primary shadow-md'
+                            : 'bg-background/50 hover:bg-accent/10 hover:border-primary/30'
+                        )}
+                      >
+                        <Checkbox
+                          id={`opt-${index}`}
+                          checked={isSelected || false}
+                          onCheckedChange={() => handleOptionChange(index, true)}
+                          className="mr-4 mt-1 shrink-0"
+                        />
+                        <span className="text-base leading-relaxed">{option}</span>
+                      </Label>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <RadioGroup
+                value={typeof selectedOption === 'number' ? selectedOption.toString() : undefined}
+                onValueChange={(value) => handleOptionChange(value, false)}
+              >
+                <div className="space-y-4">
+                  {currentQuestion.options.map((option, index) => (
+                    <Label
+                      key={index}
+                      className={cn(
                         "flex items-start p-5 rounded-xl border-2 transition-all cursor-pointer",
-                        selectedOption === index 
-                          ? 'bg-primary/10 border-primary shadow-md' 
+                        selectedOption === index
+                          ? 'bg-primary/10 border-primary shadow-md'
                           : 'bg-background/50 hover:bg-accent/10 hover:border-primary/30'
-                    )}
-                  >
-                    <RadioGroupItem value={index.toString()} id={`opt-${index}`} className="mr-4 mt-1 shrink-0" />
-                    <span className="text-base leading-relaxed">{option}</span>
-                  </Label>
-                ))}
-              </div>
-            </RadioGroup>
+                      )}
+                    >
+                      <RadioGroupItem value={index.toString()} id={`opt-${index}`} className="mr-4 mt-1 shrink-0" />
+                      <span className="text-base leading-relaxed">{option}</span>
+                    </Label>
+                  ))}
+                </div>
+              </RadioGroup>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between pt-6">
             <Button 
@@ -323,9 +401,12 @@ export default function QuizPage() {
               <ChevronLeft className="mr-2" />
               Câu trước
             </Button>
-            <Button 
-              onClick={goToNext} 
-              disabled={selectedOption === undefined}
+            <Button
+              onClick={goToNext}
+              disabled={
+                selectedOption === undefined ||
+                (Array.isArray(selectedOption) && selectedOption.length === 0)
+              }
               size="lg"
               className="bg-gradient-to-r from-primary to-primary/80"
             >

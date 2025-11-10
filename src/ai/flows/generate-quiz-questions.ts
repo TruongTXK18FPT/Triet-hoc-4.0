@@ -83,30 +83,39 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: { schema: GenerateQuizQuestionsInputSchema },
   output: { schema: GenerateQuizQuestionsOutputSchema },
-  prompt: `You are a university-level educator and expert in Marxist-Leninist philosophy.  
-Your task is to create **5 multiple-choice questions** about the following topic:
+  prompt: `Bạn là một giáo viên đại học chuyên môn cao và là chuyên gia về triết học Mác-Lênin.
+Nhiệm vụ của bạn là tạo **5 câu hỏi trắc nghiệm** về chủ đề sau:
 
-Topic: {{{topic}}}
+Chủ đề: {{{topic}}}
 
-Each question must:
-- Be clear, concise, and conceptually accurate.
-- Have exactly **4 answer options (A, B, C, D)**.
-- Include **only one correct answer**, clearly marked as "Correct Answer: ".
-- Cover **different aspects** of the topic (e.g., key definitions, thinkers, historical context, core principles, and applications).
-- Use **academic tone**, but ensure accessibility for university students.
+Mỗi câu hỏi phải:
+- Được viết **hoàn toàn bằng tiếng Việt**.
+- Rõ ràng, ngắn gọn, và chính xác về mặt khái niệm.
+- Có chính xác **4 lựa chọn trả lời (A, B, C, D)**.
+- Chỉ có **một câu trả lời đúng duy nhất**, được ghi rõ là "Đáp án đúng: ".
+- Độ dài của các lựa chọn phải **ngang nhau và không quá chênh lệch**.
+- **KHÔNG được có 2 lựa chọn nào giống nhau hoặc trùng lặp nội dung**.
+- Các đáp án sai phải hợp lý và đánh lừa được người học (distractors tốt).
+- Bao gồm **các khía cạnh khác nhau** của chủ đề (ví dụ: định nghĩa chính, nhân vật lịch sử, bối cảnh lịch sử, nguyên lý cơ bản, và ứng dụng).
+- Sử dụng **tones học thuật**, nhưng đảm bảo dễ hiểu cho sinh viên đại học.
 
-Format your output **exactly** as follows:
+Định dạng đầu ra **chính xác** như sau:
 
-Q1. [Question text]  
-A. [Option 1]  
-B. [Option 2]  
-C. [Option 3]  
-D. [Option 4]  
-**Correct Answer:** [Letter] – [Explanation of why this answer is correct in 1–2 sentences]
+Q1. [Nội dung câu hỏi]
+A. [Lựa chọn 1]
+B. [Lựa chọn 2]
+C. [Lựa chọn 3]
+D. [Lựa chọn 4]
+**Đáp án đúng:** [Chữ cái] – [Giải thích tại sao câu trả lời này đúng trong 1–2 câu]
 
-(repeat for Q2–Q5)
+(lặp lại cho Q2–Q5)
 
-Ensure all content is factual, aligned with Marxist-Leninist theory, and avoids repetition.
+Đảm bảo:
+- Tất cả nội dung đều bằng tiếng Việt.
+- Không có sự trùng lặp giữa các câu hỏi hoặc đáp án.
+- Mỗi câu hỏi có một chủ đề khác nhau.
+- Độ dài của các lựa chọn tương tự nhau (tránh chọn câu trả lời dài nhất vì nó dễ nhận ra).
+- Nội dung chính xác, phù hợp với lý thuyết Mác-Lênin.
 `,
 });
 
@@ -115,30 +124,39 @@ const promptFallback = aiFallback.definePrompt({
   name: 'generateQuizQuestionsPromptFallback',
   input: { schema: GenerateQuizQuestionsInputSchema },
   output: { schema: GenerateQuizQuestionsOutputSchema },
-  prompt: `You are a university-level educator and expert in Marxist-Leninist philosophy.  
-Your task is to create **5 multiple-choice questions** about the following topic:
+  prompt: `Bạn là một giáo viên đại học chuyên môn cao và là chuyên gia về triết học Mác-Lênin.
+Nhiệm vụ của bạn là tạo **5 câu hỏi trắc nghiệm** về chủ đề sau:
 
-Topic: {{{topic}}}
+Chủ đề: {{{topic}}}
 
-Each question must:
-- Be clear, concise, and conceptually accurate.
-- Have exactly **4 answer options (A, B, C, D)**.
-- Include **only one correct answer**, clearly marked as "Correct Answer: ".
-- Cover **different aspects** of the topic (e.g., key definitions, thinkers, historical context, core principles, and applications).
-- Use **academic tone**, but ensure accessibility for university students.
+Mỗi câu hỏi phải:
+- Được viết **hoàn toàn bằng tiếng Việt**.
+- Rõ ràng, ngắn gọn, và chính xác về mặt khái niệm.
+- Có chính xác **4 lựa chọn trả lời (A, B, C, D)**.
+- Chỉ có **một câu trả lời đúng duy nhất**, được ghi rõ là "Đáp án đúng: ".
+- Độ dài của các lựa chọn phải **ngang nhau và không quá chênh lệch**.
+- **KHÔNG được có 2 lựa chọn nào giống nhau hoặc trùng lặp nội dung**.
+- Các đáp án sai phải hợp lý và đánh lừa được người học (distractors tốt).
+- Bao gồm **các khía cạnh khác nhau** của chủ đề (ví dụ: định nghĩa chính, nhân vật lịch sử, bối cảnh lịch sử, nguyên lý cơ bản, và ứng dụng).
+- Sử dụng **tones học thuật**, nhưng đảm bảo dễ hiểu cho sinh viên đại học.
 
-Format your output **exactly** as follows:
+Định dạng đầu ra **chính xác** như sau:
 
-Q1. [Question text]  
-A. [Option 1]  
-B. [Option 2]  
-C. [Option 3]  
-D. [Option 4]  
-**Correct Answer:** [Letter] – [Explanation of why this answer is correct in 1–2 sentences]
+Q1. [Nội dung câu hỏi]
+A. [Lựa chọn 1]
+B. [Lựa chọn 2]
+C. [Lựa chọn 3]
+D. [Lựa chọn 4]
+**Đáp án đúng:** [Chữ cái] – [Giải thích tại sao câu trả lời này đúng trong 1–2 câu]
 
-(repeat for Q2–Q5)
+(lặp lại cho Q2–Q5)
 
-Ensure all content is factual, aligned with Marxist-Leninist theory, and avoids repetition.
+Đảm bảo:
+- Tất cả nội dung đều bằng tiếng Việt.
+- Không có sự trùng lặp giữa các câu hỏi hoặc đáp án.
+- Mỗi câu hỏi có một chủ đề khác nhau.
+- Độ dài của các lựa chọn tương tự nhau (tránh chọn câu trả lời dài nhất vì nó dễ nhận ra).
+- Nội dung chính xác, phù hợp với lý thuyết Mác-Lênin.
 `,
 });
 

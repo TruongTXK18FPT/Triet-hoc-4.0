@@ -5,7 +5,7 @@
 
 export const GEMINI_MODELS = {
   PRIMARY: 'googleai/gemini-2.5-flash',
-  FALLBACK: 'googleai/gemini-2.0-flash-exp',
+  FALLBACK: 'googleai/gemini-2.0-flash',
 } as const;
 
 /**

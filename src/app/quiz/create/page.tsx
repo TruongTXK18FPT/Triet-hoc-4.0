@@ -22,10 +22,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Plus, Trash2, Wand2, Save } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Loader2, Plus, Trash2, Wand2, Save, AlertCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -38,7 +38,7 @@ const optionSchema = z.object({
 const questionSchema = z.object({
   text: z.string().min(10, 'Câu hỏi cần có ít nhất 10 ký tự.'),
   options: z.array(optionSchema).min(2, 'Cần có ít nhất 2 lựa chọn.').max(6, 'Tối đa 6 lựa chọn.'),
-  correctOption: z.string({ required_error: 'Vui lòng chọn đáp án đúng.' }),
+  correctOptions: z.array(z.string()).min(1, 'Câu hỏi phải có ít nhất 1 đáp án đúng.'),
 });
 
 const quizFormSchema = z.object({
@@ -66,7 +66,7 @@ export default function CreateQuizPage() {
       isPublic: true,
       topicForAI: '',
       questions: [
-        { text: '', options: [{ text: '' }, { text: '' }], correctOption: '0' },
+        { text: '', options: [{ text: '' }, { text: '' }], correctOptions: [] },
       ],
     },
   });
@@ -101,7 +101,7 @@ export default function CreateQuizPage() {
           questions: values.questions.map((q) => ({
             prompt: q.text,
             options: q.options.map(opt => opt.text),
-            answer: parseInt(q.correctOption),
+            answers: q.correctOptions.map(idx => parseInt(idx)),
           })),
         }),
       });
@@ -143,21 +143,20 @@ export default function CreateQuizPage() {
         try {
             const result = await generateQuizQuestions({ topic });
             if (result && result.questions) {
-                // Clear existing questions
-                remove();
-                
-                // Add new questions from AI
+                // Add new questions from AI (append, don't replace)
                 result.questions.forEach((q) => {
                     append({
                         text: q.questionText,
                         options: q.options.map(opt => ({ text: opt })),
-                        correctOption: q.correctOptionIndex.toString(),
+                        correctOptions: [q.correctOptionIndex.toString()],
                     });
                 });
                 toast({
                     title: "AI đã tạo xong!",
                     description: `Đã thêm ${result.questions.length} câu hỏi về chủ đề "${topic}".`,
                 });
+                // Clear the topic input field after successful generation
+                form.setValue('topicForAI', '');
             }
         } catch (error) {
             toast({
@@ -330,15 +329,36 @@ export default function CreateQuizPage() {
                              />
                              <div className="mt-6 space-y-4">
                                 <Label className="font-semibold text-base">Các lựa chọn & Đáp án đúng</Label>
-                                <FormDescription>Chọn một đáp án đúng bằng cách click vào radio button</FormDescription>
+                                <FormDescription>Chọn một hoặc nhiều đáp án đúng bằng cách click vào checkbox</FormDescription>
+
+                                {/* Warning if no correct answer selected */}
+                                {(!question.correctOptions || question.correctOptions.length === 0) && (
+                                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/50">
+                                    <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                                    <p className="text-sm text-destructive">Câu hỏi này chưa có đáp án đúng nào được chọn</p>
+                                  </div>
+                                )}
+
                                 <FormField
                                     control={form.control}
-                                    name={`questions.${qIndex}.correctOption`}
+                                    name={`questions.${qIndex}.correctOptions`}
                                     render={({ field }) => (
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-3">
+                                        <div className="space-y-3">
                                             {question.options.map((option, oIndex) => (
                                                 <div key={oIndex} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border hover:border-primary/50 transition-colors">
-                                                    <RadioGroupItem value={oIndex.toString()} id={`${question.id}-opt-${oIndex}`} className="shrink-0"/>
+                                                    <Checkbox
+                                                        id={`${question.id}-opt-${oIndex}`}
+                                                        checked={field.value?.includes(oIndex.toString()) || false}
+                                                        onCheckedChange={(checked) => {
+                                                          const current = field.value || [];
+                                                          if (checked) {
+                                                            field.onChange([...current, oIndex.toString()]);
+                                                          } else {
+                                                            field.onChange(current.filter(idx => idx !== oIndex.toString()));
+                                                          }
+                                                        }}
+                                                        className="shrink-0 mt-1"
+                                                    />
                                                     <FormField
                                                         control={form.control}
                                                         name={`questions.${qIndex}.options.${oIndex}.text`}
@@ -346,11 +366,11 @@ export default function CreateQuizPage() {
                                                             <Input {...optionField} className="flex-1" placeholder={`Lựa chọn ${oIndex + 1}`} />
                                                         )}
                                                     />
-                                                     <Button 
-                                                      type="button" 
-                                                      variant="ghost" 
-                                                      size="icon" 
-                                                      className="shrink-0 hover:bg-destructive/10 hover:text-destructive" 
+                                                     <Button
+                                                      type="button"
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
                                                       onClick={() => {
                                                         if (question.options.length > 2) {
                                                           const newOptions = question.options.filter((_, i) => i !== oIndex);
@@ -368,11 +388,11 @@ export default function CreateQuizPage() {
                                                     </Button>
                                                 </div>
                                             ))}
-                                        </RadioGroup>
+                                        </div>
                                     )}
                                 />
-                                {form.formState.errors.questions?.[qIndex]?.correctOption && (
-                                  <FormMessage>{form.formState.errors.questions?.[qIndex]?.correctOption?.message}</FormMessage>
+                                {form.formState.errors.questions?.[qIndex]?.correctOptions && (
+                                  <FormMessage>{form.formState.errors.questions?.[qIndex]?.correctOptions?.message}</FormMessage>
                                 )}
                              </div>
                              <Button 
@@ -405,7 +425,7 @@ export default function CreateQuizPage() {
                             variant="secondary"
                             size="lg"
                             className="w-full"
-                            onClick={() => append({ text: '', options: [{ text: '' }, { text: '' }], correctOption: '0' })}
+                            onClick={() => append({ text: '', options: [{ text: '' }, { text: '' }], correctOptions: [] })}
                         >
                             <Plus className="mr-2 h-5 w-5" /> Thêm câu hỏi mới
                         </Button>
