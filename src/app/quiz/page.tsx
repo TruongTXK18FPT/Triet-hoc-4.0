@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
-import { PlusCircle, BookOpen, Loader2, User, Calendar, Lock, Globe } from 'lucide-react';
+import { PlusCircle, BookOpen, Loader2, User, Calendar, Lock, Globe, Edit } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
@@ -50,7 +50,7 @@ export default function QuizListPage() {
 
       // Fetch user's quizzes if logged in
       if (session?.user) {
-        const userResponse = await fetch('/api/quiz');
+        const userResponse = await fetch('/api/quiz?myQuizzes=true');
         if (userResponse.ok) {
           const data = await userResponse.json();
           const userQuizzes = data.quizzes || [];
@@ -73,7 +73,7 @@ export default function QuizListPage() {
     });
   };
 
-  const QuizGrid = ({ quizzes, emptyMessage }: { quizzes: Quiz[], emptyMessage: string }) => {
+  const QuizGrid = ({ quizzes, emptyMessage, showEdit = false }: { quizzes: Quiz[], emptyMessage: string, showEdit?: boolean }) => {
     if (isLoading) {
       return (
         <div className="flex justify-center items-center py-20">
@@ -123,8 +123,16 @@ export default function QuizListPage() {
                 <span>{formatDate(quiz.createdAt)}</span>
               </div>
             </CardContent>
-            <CardFooter className="pt-4">
-              <Button asChild className="w-full group-hover:bg-primary/90 transition-colors">
+            <CardFooter className="pt-4 flex gap-2">
+              {showEdit && (
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href={`/quiz/${quiz.id}/edit`}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Chỉnh sửa
+                  </Link>
+                </Button>
+              )}
+              <Button asChild className={showEdit ? "flex-1 group-hover:bg-primary/90 transition-colors" : "w-full group-hover:bg-primary/90 transition-colors"}>
                 <Link href={`/quiz/${quiz.id}`}>Bắt đầu làm bài</Link>
               </Button>
             </CardFooter>
@@ -183,7 +191,8 @@ export default function QuizListPage() {
               {session ? (
                 <QuizGrid 
                   quizzes={myQuizzes} 
-                  emptyMessage="Bạn chưa tạo quiz nào. Bắt đầu tạo quiz đầu tiên!" 
+                  emptyMessage="Bạn chưa tạo quiz nào. Bắt đầu tạo quiz đầu tiên!"
+                  showEdit={true}
                 />
               ) : (
                 <div className="text-center py-20">

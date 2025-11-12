@@ -17,7 +17,9 @@ const footerSections = [
         { name: 'Sứ mệnh', href: '/mission' },
         { name: 'Đội ngũ', href: '/team' },
         { name: 'Tuyển dụng', href: '/careers' },
-        { name: 'AI Usage', href: '/ai-commitment' }
+        { name: 'AI Usage', href: '/ai-commitment' },
+        { name: 'Báo cáo KPI', href: '/kpi-report' },
+        { name: 'Log Công Việc', href: '/work-log' },
       ],
     },
     {
@@ -45,7 +47,7 @@ export function Footer() {
     <footer className="relative text-primary-foreground overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/95 to-primary" />
       <div className="container mx-auto px-4 py-12 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="mb-6 md:mb-0 lg:col-span-1">
              <Link href="/" className="flex items-center gap-3 mb-4 group">
               <Image 
@@ -71,6 +73,8 @@ export function Footer() {
               <li><Link href="/team" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Đội ngũ</Link></li>
               <li><Link href="/careers" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Tuyển dụng</Link></li>
               <li><Link href="/ai-commitment" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Cam kết AI</Link></li>
+              <li><Link href="/kpi-report" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Báo cáo KPI</Link></li>
+              <li><Link href="/work-log" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Log Công Việc</Link></li>
             </ul>
           </div>
 
@@ -116,6 +120,7 @@ export function Footer() {
                 allow="encrypted-media"
                 allowFullScreen
                 loading="lazy"
+                title="Facebook Page"
               />
             </div>
             <Link
@@ -128,6 +133,7 @@ export function Footer() {
               <span>Xem thêm trên Facebook</span>
             </Link>
           </div>
+
         </div>
         <div className="mt-12 border-t border-primary-foreground/20 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-primary-foreground/70 mb-4 md:mb-0">&copy; {new Date().getFullYear()} Triết Học 4.0. All rights reserved.</p>

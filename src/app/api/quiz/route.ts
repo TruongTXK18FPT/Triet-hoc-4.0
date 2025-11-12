@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -88,14 +88,29 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(req.url);
     const authorId = searchParams.get('authorId');
     const isPublic = searchParams.get('isPublic');
+    const myQuizzes = searchParams.get('myQuizzes'); // New parameter to get current user's quizzes
 
     const where: any = {};
     
     if (authorId) {
       where.authorId = authorId;
+    } else if (myQuizzes === 'true') {
+      // Get current user's quizzes
+      if (!session?.user?.email) {
+        return NextResponse.json({ quizzes: [] }, { status: 200 });
+      }
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+      if (user) {
+        where.authorId = user.id;
+      } else {
+        return NextResponse.json({ quizzes: [] }, { status: 200 });
+      }
     } else if (isPublic === 'true') {
       where.isPublic = true;
     }

@@ -39,7 +39,7 @@ type AnswersState = {
 
 export default function QuizPage() {
   const params = useParams();
-  const { slug } = params; // This is now the quiz ID
+  const { id } = params; // Quiz ID
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +77,7 @@ export default function QuizPage() {
     async function fetchQuiz() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/quiz/${slug}`);
+        const response = await fetch(`/api/quiz/${id}`);
         if (!response.ok) {
           throw new Error('Quiz not found');
         }
@@ -91,7 +91,7 @@ export default function QuizPage() {
     }
 
     fetchQuiz();
-  }, [slug]);
+  }, [id]);
 
   // Award XP when quiz is completed
   useEffect(() => {
@@ -420,3 +420,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
