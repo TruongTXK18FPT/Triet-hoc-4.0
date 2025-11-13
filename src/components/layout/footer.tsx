@@ -69,6 +69,7 @@ export function Footer() {
               Về Chúng Tôi
             </h3>
             <ul className="space-y-2">
+              <li><Link href="/about" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Về Dự Án</Link></li>
               <li><Link href="/mission" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Sứ mệnh</Link></li>
               <li><Link href="/team" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Đội ngũ</Link></li>
               <li><Link href="/careers" className="text-sm text-primary-foreground/80 hover:text-white transition-colors inline-block relative group"><span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white/70 transition-all duration-300 group-hover:w-full" />Tuyển dụng</Link></li>

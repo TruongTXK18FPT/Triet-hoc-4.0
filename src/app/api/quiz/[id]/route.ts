@@ -11,11 +11,23 @@ const updateQuizSchema = z.object({
     z.object({
       id: z.string().optional(), // For existing questions
       prompt: z.string().min(10, 'Câu hỏi cần có ít nhất 10 ký tự.'),
-      options: z.array(z.string()).min(2).max(6),
+      options: z.array(z.string().min(1, 'Lựa chọn không được để trống.')).min(2, 'Cần có ít nhất 2 lựa chọn.').max(6, 'Tối đa 6 lựa chọn.'),
       answer: z.number().int().min(0).optional(),
-      answers: z.array(z.number().int().min(0)).optional(),
+      answers: z.array(z.number().int().min(0)).min(1, 'Mỗi câu hỏi phải có ít nhất một đáp án đúng.').optional(),
     })
   ).min(1, 'Quiz cần có ít nhất 1 câu hỏi.').optional(),
+}).refine((data) => {
+  // Ensure each question has either answer or answers
+  if (data.questions) {
+    return data.questions.every(q => 
+      (q.answer !== undefined && q.answer >= 0) || 
+      (q.answers && q.answers.length > 0)
+    );
+  }
+  return true;
+}, {
+  message: 'Mỗi câu hỏi phải có ít nhất một đáp án đúng',
+  path: ['questions'],
 });
 
 export async function GET(

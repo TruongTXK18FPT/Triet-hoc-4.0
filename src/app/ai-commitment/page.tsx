@@ -6,8 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Shield,
   Heart,
-  Lock,
-  Eye,
   BookOpen,
   AlertCircle,
   Mail,
@@ -175,6 +173,150 @@ export default function AICommitmentPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/95 backdrop-blur shadow-2xl border-2 border-purple-200">
+              <CardContent className="p-8 md:p-12">
+                <div className="flex items-start gap-4 mb-6">
+                  <Sparkles className="h-10 w-10 text-purple-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold text-primary mb-6">
+                      🔍 4.1. Khả năng và chức năng của AI
+                    </h2>
+                    <p className="text-lg text-slate-700 mb-6">
+                      Triết học 4.0 cung cấp các khả năng AI sau đây để hỗ trợ người học:
+                    </p>
+
+                    {/* 1.1 Tìm kiếm thông tin & tổng hợp kiến thức */}
+                    <div className="mb-8">
+                      <h3 className="text-2xl font-bold text-purple-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">📚</span>{" "}
+                        1.1. Tìm kiếm thông tin & tổng hợp kiến thức
+                      </h3>
+                      <div className="space-y-3 ml-8">
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            🔍 Tìm kiếm khái niệm triết học, kinh tế chính trị, CNXH khoa học
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            AI có thể tìm kiếm và giải thích các khái niệm, thuật ngữ, lý thuyết trong các lĩnh vực Triết học Mác–Lênin, Kinh tế chính trị, và Chủ nghĩa xã hội khoa học.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            📖 Tóm tắt tài liệu học thuật từ các nguồn chính thống
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Hỗ trợ tổng hợp và tóm tắt nội dung từ các giáo trình, tài liệu học thuật, nghiên cứu khoa học một cách chính xác và có hệ thống.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            💡 Gợi ý nội dung liên quan để giúp người học mở rộng tri thức
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Đề xuất các chủ đề, khái niệm, tài liệu liên quan để người học có thể mở rộng và đào sâu kiến thức của mình.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 1.2 Hỗ trợ lên kế hoạch và phát triển ý tưởng */}
+                    <div className="mb-8">
+                      <h3 className="text-2xl font-bold text-purple-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">✍️</span>{" "}
+                        1.2. Hỗ trợ lên kế hoạch và phát triển ý tưởng
+                      </h3>
+                      <div className="space-y-3 ml-8">
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-l-4 border-green-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            📋 Gợi ý cấu trúc bài thuyết trình, outline bài luận, câu hỏi thảo luận
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Hỗ trợ xây dựng khung nội dung, dàn ý chi tiết cho các bài thuyết trình, bài luận, và đề xuất câu hỏi thảo luận phù hợp với chủ đề.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-l-4 border-green-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            🧠 Hỗ trợ brainstorm ý tưởng cho bài học, hoạt động nhóm, hoặc mô-đun hệ thống
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Gợi ý các ý tưởng sáng tạo cho việc thiết kế bài học, hoạt động nhóm, hoặc phát triển các tính năng mới cho hệ thống.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-l-4 border-green-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            🎨 Đề xuất các phương pháp giảng dạy hoặc mô hình trực quan hóa nội dung triết học
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Gợi ý các cách thức trình bày, minh họa, và trực quan hóa các khái niệm triết học phức tạp để dễ hiểu hơn.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 1.3 Hỗ trợ kỹ thuật */}
+                    <div className="mb-8">
+                      <h3 className="text-2xl font-bold text-purple-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">⚙️</span>{" "}
+                        1.3. Hỗ trợ kỹ thuật
+                      </h3>
+                      <div className="space-y-3 ml-8">
+                        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border-l-4 border-orange-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            💻 Gợi ý giải pháp kỹ thuật cho lập trình hệ thống Triết học 4.0
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Đề xuất các giải pháp kỹ thuật, kiến trúc, và công nghệ phù hợp cho việc phát triển và cải tiến hệ thống.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border-l-4 border-orange-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            🔍 Hỗ trợ xem xét logic code, gợi ý cách xử lý lỗi hoặc cải tiến hiệu suất
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Giúp phân tích logic code, đề xuất cách xử lý lỗi, tối ưu hóa hiệu suất, và cải thiện chất lượng mã nguồn.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border-l-4 border-orange-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            📝 Tạo ví dụ code minh họa theo yêu cầu (không thay thế kỹ năng lập trình của sinh viên)
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Cung cấp các ví dụ code minh họa để hỗ trợ học tập, nhưng không thay thế quá trình học và thực hành lập trình của sinh viên.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 1.4 Gợi ý cách thức thực hiện nhiệm vụ */}
+                    <div className="mb-6">
+                      <h3 className="text-2xl font-bold text-purple-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">🗺️</span>{" "}
+                        1.4. Gợi ý cách thức thực hiện nhiệm vụ
+                      </h3>
+                      <div className="space-y-3 ml-8">
+                        <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border-l-4 border-pink-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            📌 Đưa ra hướng dẫn từng bước để triển khai tính năng, thực hiện nghiên cứu hoặc xây dựng nội dung
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Cung cấp hướng dẫn chi tiết, từng bước một để thực hiện các nhiệm vụ như phát triển tính năng, nghiên cứu, hoặc tạo nội dung học tập.
+                          </p>
+                        </div>
+                        <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border-l-4 border-pink-400">
+                          <p className="text-slate-800 font-medium mb-2">
+                            📚 Giải thích quy trình và phương pháp học tập cho người dùng
+                          </p>
+                          <p className="text-slate-700 text-sm">
+                            Hướng dẫn các phương pháp học tập hiệu quả, quy trình nghiên cứu, và cách tiếp cận các vấn đề triết học một cách có hệ thống.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

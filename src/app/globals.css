@@ -324,5 +324,24 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--primary) / 0.6);
   }
+
+  /* QR Code scan animation */
+  @keyframes scan {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(200px);
+      opacity: 0;
+    }
+  }
+
+  .animate-scan {
+    animation: scan 2s ease-in-out infinite;
+  }
 }
 

@@ -42,9 +42,9 @@ const questionSchema = z.object({
 
 const quizFormSchema = z.object({
   title: z.string().min(5, 'Tiêu đề cần có ít nhất 5 ký tự.'),
-  description: z.string().min(10, 'Mô tả cần có ít nhất 10 ký tự.').optional(),
+  description: z.string().optional().or(z.literal('')),
   isPublic: z.boolean().default(true),
-  topicForAI: z.string().optional(),
+  topicForAI: z.string().optional().or(z.literal('')),
   questions: z.array(questionSchema).min(1, 'Quiz cần có ít nhất 1 câu hỏi.'),
 });
 
@@ -91,15 +91,32 @@ export default function EditQuizPage() {
     },
   });
 
-  const { fields, append, remove, update, replace } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: 'questions',
   });
 
+  // Track if data has been loaded to prevent reload on tab switch
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Prevent page reload when switching tabs (if form has unsaved changes)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (form.formState.isDirty) {
+        e.preventDefault();
+        // eslint-disable-next-line deprecation/deprecation
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [form.formState.isDirty]);
+
   // Load quiz data
   useEffect(() => {
     async function loadQuiz() {
-      if (!quizId) return;
+      if (!quizId || !session || hasLoaded) return;
 
       setIsLoading(true);
       try {
@@ -137,6 +154,7 @@ export default function EditQuizPage() {
             };
           }),
         });
+        setHasLoaded(true);
       } catch (error) {
         console.error(error);
         toast({
@@ -150,12 +168,14 @@ export default function EditQuizPage() {
       }
     }
 
-    if (session && quizId) {
+    if (session && quizId && !hasLoaded) {
       loadQuiz();
     }
-  }, [quizId, session, form, router, toast]);
+  }, [quizId, session?.user?.email, hasLoaded, router, toast]);
 
   async function onSubmit(values: QuizFormValues) {
+    console.log('onSubmit function called with values:', values);
+    
     if (status !== 'authenticated') {
       toast({
         variant: 'destructive',
@@ -166,28 +186,82 @@ export default function EditQuizPage() {
       return;
     }
 
+    // Validate form before submitting
+    const isValid = await form.trigger();
+    if (!isValid) {
+      const errors = form.formState.errors;
+      console.error('Form validation errors:', errors);
+      
+      // Show specific error messages
+      if (errors.title) {
+        toast({
+          variant: 'destructive',
+          title: "Lỗi tiêu đề",
+          description: errors.title.message,
+        });
+      } else if (errors.questions) {
+        toast({
+          variant: 'destructive',
+          title: "Lỗi câu hỏi",
+          description: errors.questions.message || "Vui lòng kiểm tra lại các câu hỏi.",
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: "Lỗi validation",
+          description: "Vui lòng kiểm tra lại các trường bắt buộc.",
+        });
+      }
+      return;
+    }
+
+    // Validate questions have correct answers
+    const hasInvalidQuestions = values.questions.some(q => 
+      !q.correctOptions || q.correctOptions.length === 0
+    );
+    
+    if (hasInvalidQuestions) {
+      toast({
+        variant: 'destructive',
+        title: "Lỗi đáp án",
+        description: "Mỗi câu hỏi phải có ít nhất một đáp án đúng được chọn.",
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
+      const payload = {
+        title: values.title,
+        isPublic: values.isPublic,
+        questions: values.questions.map((q) => {
+          const answers = q.correctOptions.map(idx => Number.parseInt(idx, 10));
+          return {
+            prompt: q.text,
+            options: q.options.map(opt => opt.text).filter(opt => opt.trim() !== ''),
+            answers: answers.length > 0 ? answers : [0],
+          };
+        }).filter(q => q.prompt.trim() !== '' && q.options.length >= 2),
+      };
+
+      console.log('Submitting quiz update:', payload);
+
       const response = await fetch(`/api/quiz/${quizId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: values.title,
-          isPublic: values.isPublic,
-          questions: values.questions.map((q) => ({
-            prompt: q.text,
-            options: q.options.map(opt => opt.text),
-            answers: q.correctOptions.map(idx => parseInt(idx)),
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Không thể cập nhật quiz');
+        console.error('API Error:', data);
+        const errorMessage = data.error || 
+                            (data.details && Array.isArray(data.details) ? data.details[0]?.message : null) ||
+                            'Không thể cập nhật quiz';
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -198,7 +272,7 @@ export default function EditQuizPage() {
       // Redirect to quiz list
       router.push('/quiz');
     } catch (error) {
-      console.error(error);
+      console.error('Error updating quiz:', error);
       toast({
         variant: 'destructive',
         title: "Lỗi!",
@@ -279,7 +353,31 @@ export default function EditQuizPage() {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form 
+              onSubmit={(e) => {
+                console.log('Form submit triggered');
+                e.preventDefault();
+                
+                // Log errors before submit
+                const errors = form.formState.errors;
+                if (Object.keys(errors).length > 0) {
+                  console.error('Form has errors, preventing submit:', errors);
+                  // Show toast with first error
+                  const firstError = Object.values(errors)[0];
+                  if (firstError) {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Lỗi validation',
+                      description: firstError.message || 'Vui lòng kiểm tra lại các trường bắt buộc.',
+                    });
+                  }
+                  return;
+                }
+                
+                form.handleSubmit(onSubmit)(e);
+              }} 
+              className="space-y-8"
+            >
                 <Card className="border-2 shadow-xl bg-card/95 backdrop-blur-sm">
                     <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
                         <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
@@ -521,6 +619,25 @@ export default function EditQuizPage() {
                   size="lg" 
                   className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" 
                   disabled={isSaving || isPending}
+                  onClick={(e) => {
+                    console.log('Submit button clicked');
+                    const formState = {
+                      isValid: form.formState.isValid,
+                      errors: form.formState.errors,
+                      isDirty: form.formState.isDirty,
+                      values: form.getValues(),
+                    };
+                    console.log('Form state:', formState);
+                    console.log('Detailed errors:', JSON.stringify(formState.errors, null, 2));
+                    
+                    // Try to trigger validation to see all errors
+                    form.trigger().then((isValid) => {
+                      console.log('Validation result:', isValid);
+                      if (!isValid) {
+                        console.log('Validation errors after trigger:', form.formState.errors);
+                      }
+                    });
+                  }}
                 >
                   {isSaving ? (
                     <>
