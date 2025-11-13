@@ -106,8 +106,14 @@ export default function PlayCrosswordGame() {
       setAnsweredQuestions((prev) => new Set([...prev, questionOrder]));
       setCorrectAnswers((prev) => new Set([...prev, questionOrder]));
 
-      // Mở khóa chữ cái keyword (sử dụng thứ tự câu hỏi làm index trong keyword)
-      setRevealedLetters((prev) => new Set([...prev, question.order - 1]));
+      // Mở khóa CHỈ MỘT chữ cái keyword tại vị trí keywordCharIndex của câu hỏi này
+      // Không mở khóa các chữ cái trùng lặp khác trong keyword
+      const newRevealedLetters = new Set([
+        ...revealedLetters,
+        question.keywordCharIndex,
+      ]);
+      
+      setRevealedLetters(newRevealedLetters);
 
       toast({
         title: "Chính xác!",
@@ -115,7 +121,7 @@ export default function PlayCrosswordGame() {
       });
 
       // Kiểm tra xem đã mở khóa hết chữ cái chưa
-      if (revealedLetters.size === game?.keyword.length) {
+      if (newRevealedLetters.size === game?.keyword.length) {
         setTimeout(() => {
           setGameWon(true);
         }, 1000);

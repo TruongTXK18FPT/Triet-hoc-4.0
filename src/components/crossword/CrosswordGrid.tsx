@@ -30,51 +30,31 @@ export function CrosswordGrid({
 }: CrosswordGridProps) {
   const [grid, setGrid] = useState<string[][]>([]);
   const [keywordPositions, setKeywordPositions] = useState<boolean[][]>([]);
+  const [keywordColumn, setKeywordColumn] = useState<number>(0);
 
   useEffect(() => {
-    // Tìm cột keyword tối ưu nếu chưa có
-    const optimalKeywordColumn = findOptimalKeywordColumn(questions);
-
-    // Cập nhật questions với keywordColumn nếu chưa có
-    const updatedQuestions = questions.map((q) => ({
+    // BƯỚC 1: Phân tích các câu hỏi để tìm layout tối ưu
+    const analysis = questions.map((q) => ({
       ...q,
-      keywordColumn: q.keywordColumn || optimalKeywordColumn,
+      distanceFromStart: q.keywordCharIndex, // Số ô từ đầu câu đến keyword
+      distanceFromEnd: q.answer.length - q.keywordCharIndex - 1, // Số ô từ keyword đến cuối câu
     }));
 
-    // Tạo grid với keyword column cố định
-    const gridHeight = updatedQuestions.length;
+    // BƯỚC 2: Tính toán cột keyword tối ưu
+    // - Đặt cột keyword đủ xa để chứa câu có distanceFromStart lớn nhất
+    // - Thêm padding 2 ô bên trái
+    const maxDistanceFromStart = Math.max(
+      ...analysis.map((a) => a.distanceFromStart)
+    );
+    const maxDistanceFromEnd = Math.max(
+      ...analysis.map((a) => a.distanceFromEnd)
+    );
 
-    // Tính gridWidth động để chứa tất cả các trường hợp
-    const calculateGridWidth = () => {
-      let minStartCol = 0;
-      let maxEndCol = 0;
+    const optimalKeywordColumn = maxDistanceFromStart + 2; // +2 padding bên trái
+    const gridWidth = optimalKeywordColumn + maxDistanceFromEnd + 3; // +3 padding bên phải
 
-      updatedQuestions.forEach((q) => {
-        const offset = q.keywordColumn - q.keywordCharIndex;
-        const startCol = offset;
-        const endCol = offset + q.answer.length - 1;
-
-        minStartCol = Math.min(minStartCol, startCol);
-        maxEndCol = Math.max(maxEndCol, endCol);
-      });
-
-      // Đảm bảo keyword column nằm trong grid
-      const keywordColumnInRange = Math.max(
-        0,
-        Math.min(optimalKeywordColumn, maxEndCol)
-      );
-
-      // Grid width = khoảng cách từ cột đầu đến cột cuối + padding
-      const calculatedWidth = maxEndCol - minStartCol + 2; // +2 cho padding
-
-      return Math.max(
-        calculatedWidth,
-        keyword.length,
-        15 // minimum width
-      );
-    };
-
-    const gridWidth = calculateGridWidth();
+    // BƯỚC 3: Tạo grid với spacing giữa các câu (3 hàng cho mỗi câu)
+    const gridHeight = questions.length * 3; // 3 hàng: 1 trống, 1 câu trả lời, 1 trống
 
     const newGrid: string[][] = Array(gridHeight)
       .fill(null)
@@ -83,87 +63,77 @@ export function CrosswordGrid({
       .fill(null)
       .map(() => Array(gridWidth).fill(false));
 
-    // Điền câu trả lời với offset để keyword characters thẳng hàng
-    updatedQuestions.forEach((question, rowIndex) => {
+    // BƯỚC 4: Điền từng câu trả lời vào grid
+    questions.forEach((question, index) => {
       const answer = question.answer.toUpperCase();
-      const offset = question.keywordColumn - question.keywordCharIndex;
+      const rowIndex = index * 3 + 1; // Hàng giữa của mỗi block 3 hàng
 
-      // Điều chỉnh offset nếu cần thiết để tránh mất chữ
-      const adjustedOffset = Math.max(0, offset);
+      // Tính vị trí bắt đầu để chữ cái keyword nằm đúng cột optimalKeywordColumn
+      const startColumn = optimalKeywordColumn - question.keywordCharIndex;
 
+      // Điền các chữ cái
       for (let i = 0; i < answer.length; i++) {
-        const colIndex = i + adjustedOffset;
+        const colIndex = startColumn + i;
         if (colIndex >= 0 && colIndex < gridWidth) {
           newGrid[rowIndex][colIndex] = answer[i];
         }
       }
 
-      // Đánh dấu vị trí keyword (có thể khác với vị trí thực tế nếu offset bị điều chỉnh)
-      const actualKeywordColumn = Math.max(0, question.keywordColumn);
-      if (actualKeywordColumn < gridWidth) {
-        newKeywordPositions[rowIndex][actualKeywordColumn] = true;
+      // Đánh dấu vị trí chữ cái keyword
+      const keywordColIndex = startColumn + question.keywordCharIndex;
+      if (keywordColIndex >= 0 && keywordColIndex < gridWidth) {
+        newKeywordPositions[rowIndex][keywordColIndex] = true;
       }
     });
 
     setGrid(newGrid);
     setKeywordPositions(newKeywordPositions);
+    setKeywordColumn(optimalKeywordColumn);
   }, [questions, keyword]);
 
-  // Thuật toán tìm cột keyword tối ưu
-  function findOptimalKeywordColumn(questions: any[]): number {
-    if (questions.length === 0) return 5;
-
-    const maxAnswerLength = Math.max(...questions.map((q) => q.answer.length));
-    const estimatedGridWidth = Math.max(maxAnswerLength, keyword.length, 15);
-
-    // Tìm cột có nhiều chữ cái keyword nhất
-    const columnCounts = Array(estimatedGridWidth).fill(0);
-
-    questions.forEach((q) => {
-      const possibleColumns = [];
-      for (let col = 0; col < estimatedGridWidth; col++) {
-        const startPos = col - q.keywordCharIndex;
-        if (startPos >= 0 && startPos + q.answer.length <= estimatedGridWidth) {
-          possibleColumns.push(col);
-        }
-      }
-      possibleColumns.forEach((col) => columnCounts[col]++);
-    });
-
-    const maxCount = Math.max(...columnCounts);
-    const optimalColumn = columnCounts.indexOf(maxCount);
-
-    // Nếu không tìm được cột tối ưu, dùng cột giữa
-    return optimalColumn >= 0
-      ? optimalColumn
-      : Math.floor(estimatedGridWidth / 2);
-  }
-
   const getCellClass = (row: number, col: number, char: string) => {
+    // Tính index của câu hỏi từ row (mỗi câu chiếm 3 hàng)
+    const questionIndex = Math.floor(row / 3);
+    const isAnswerRow = row % 3 === 1; // Chỉ hàng giữa mới có câu trả lời
     const isKeyword = keywordPositions[row]?.[col];
-    const isAnswered = answeredQuestions.has(questions[row]?.order);
-    const isSelected = selectedQuestion === questions[row]?.order;
+    const isKeywordColumn = col === keywordColumn; // Toàn bộ cột keyword
+    const question = questions[questionIndex];
+    const isAnswered = question ? answeredQuestions.has(question.order) : false;
+    const isSelected = question ? selectedQuestion === question.order : false;
+
+    // Ô trống (không có chữ) - transparent
+    if (!char || char === "") {
+      return cn(
+        "w-8 h-8 flex items-center justify-center transition-all duration-200",
+        {
+          // Hiển thị visual guide cho cột keyword
+          "border-l-2 border-red-200": isKeywordColumn && !isAnswerRow,
+          "bg-red-50/20": isKeywordColumn && !isAnswerRow,
+        }
+      );
+    }
 
     return cn(
-      "w-8 h-8 border border-[#44392d]/30 flex items-center justify-center text-sm font-semibold transition-all duration-200",
+      "w-8 h-8 border-2 flex items-center justify-center text-sm font-semibold transition-all duration-200 cursor-pointer",
       {
-        // Keyword column styling
-        "bg-gradient-to-b from-red-500 to-red-700 text-white border-red-600":
-          isKeyword,
-        "bg-red-100 border-red-300": isKeyword && !isAnswered,
+        // Keyword cell - chữ cái nằm trong cột keyword
+        "bg-gradient-to-br from-red-500 to-red-700 text-white border-red-600 shadow-md":
+          isKeyword && isAnswered,
+        "bg-red-100 border-red-300 text-red-800": isKeyword && !isAnswered,
 
-        // Answered styling
+        // Answered cells - không phải keyword
         "bg-green-100 border-green-400 text-green-800":
-          isAnswered && !isKeyword,
-        "bg-green-200 border-green-500 text-green-900": isAnswered && isKeyword,
+          isAnswered && !isKeyword && isAnswerRow,
+        
+        // Not answered yet
+        "bg-white border-gray-300 text-gray-800 hover:bg-gray-50":
+          !isAnswered && isAnswerRow,
 
-        // Selected styling
-        "ring-2 ring-[#44392d] ring-opacity-50": isSelected,
-
-        // Default styling
-        "bg-white hover:bg-gray-50": !isAnswered && !isKeyword,
-        "text-gray-400": !isAnswered && char === "",
-        "text-gray-800": isAnswered && char !== "",
+        // Selected question highlight
+        "ring-2 ring-[#44392d] scale-105": isSelected && isAnswerRow,
+        
+        // Empty spacing rows
+        "opacity-0 pointer-events-none": !isAnswerRow,
       }
     );
   };
@@ -175,59 +145,88 @@ export function CrosswordGrid({
           Lưới ô chữ
         </h3>
         <p className="text-sm text-gray-600">
-          Cột đỏ là keyword. Click vào câu hỏi để trả lời.
+          Cột đỏ là keyword. Click vào hàng câu hỏi để trả lời.
         </p>
       </div>
 
-      <div className="grid gap-1 mb-4">
-        {/* Header với số thứ tự */}
-        <div className="flex gap-1 mb-2">
-          <div className="w-8 h-6 flex items-center justify-center text-xs font-bold text-[#44392d]"></div>
-          {Array.from({ length: grid[0]?.length || 0 }, (_, i) => (
-            <div
-              key={i}
-              className="w-8 h-6 flex items-center justify-center text-xs font-bold text-[#44392d]"
-            >
-              {i + 1}
-            </div>
-          ))}
-        </div>
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-full">
+          {/* Grid với spacing tự động */}
+          {grid.map((row, rowIndex) => {
+            const questionIndex = Math.floor(rowIndex / 3);
+            const isAnswerRow = rowIndex % 3 === 1;
+            const question = questions[questionIndex];
 
-        {/* Grid */}
-        {grid.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex gap-1">
-            {/* Số thứ tự câu hỏi */}
-            <div className="w-8 h-8 flex items-center justify-center text-xs font-bold text-[#44392d] bg-gray-100 rounded">
-              {questions[rowIndex]?.order}
-            </div>
+            // Chỉ hiển thị hàng có nội dung hoặc là spacing row
+            if (!isAnswerRow && row.every((cell) => !cell)) {
+              // Spacing row - chỉ hiển thị visual guide cho cột keyword
+              return (
+                <div key={rowIndex} className="flex gap-1" style={{ height: '12px' }}>
+                  <div className="w-8"></div>
+                  {row.map((_, colIndex) => (
+                    <div
+                      key={`${rowIndex}-${colIndex}`}
+                      className={cn("w-8", {
+                        "border-l-2 border-red-200": colIndex === keywordColumn,
+                      })}
+                    ></div>
+                  ))}
+                </div>
+              );
+            }
 
-            {/* Các ô chữ */}
-            {row.map((char, colIndex) => (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                className={getCellClass(rowIndex, colIndex, char)}
-                onClick={() => onQuestionClick(questions[rowIndex]?.order)}
-              >
-                {answeredQuestions.has(questions[rowIndex]?.order) ? char : ""}
+            return (
+              <div key={rowIndex} className="flex gap-1 items-center mb-1">
+                {/* Số thứ tự câu hỏi - chỉ hiển thị ở hàng answer */}
+                {isAnswerRow ? (
+                  <div className="w-8 h-8 flex items-center justify-center text-sm font-bold text-white bg-gradient-to-br from-[#44392d] to-[#5a4a3a] rounded shadow-sm">
+                    {question?.order}
+                  </div>
+                ) : (
+                  <div className="w-8"></div>
+                )}
+
+                {/* Các ô chữ */}
+                {row.map((char, colIndex) => {
+                  const cellClass = getCellClass(rowIndex, colIndex, char);
+                  const shouldShowChar =
+                    isAnswerRow &&
+                    question &&
+                    answeredQuestions.has(question.order);
+
+                  return (
+                    <div
+                      key={`${rowIndex}-${colIndex}`}
+                      className={cellClass}
+                      onClick={() => {
+                        if (isAnswerRow && question) {
+                          onQuestionClick(question.order);
+                        }
+                      }}
+                    >
+                      {shouldShowChar ? char : ""}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        ))}
+            );
+          })}
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-sm">
+      <div className="mt-6 flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gradient-to-b from-red-500 to-red-700 rounded"></div>
-          <span>Cột keyword</span>
+          <div className="w-4 h-4 bg-gradient-to-br from-red-500 to-red-700 rounded shadow-sm"></div>
+          <span className="text-gray-700">Chữ cái keyword</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-100 border border-green-400 rounded"></div>
-          <span>Đã trả lời</span>
+          <div className="w-4 h-4 bg-green-100 border-2 border-green-400 rounded"></div>
+          <span className="text-gray-700">Đã trả lời đúng</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
-          <span>Chưa trả lời</span>
+          <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+          <span className="text-gray-700">Chưa trả lời</span>
         </div>
       </div>
     </div>
