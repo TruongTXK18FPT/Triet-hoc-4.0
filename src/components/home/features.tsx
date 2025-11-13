@@ -4,7 +4,7 @@ import {
   FileText,
   ScrollText,
   Bot,
-  LayoutDashboard,
+  BookOpen,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
@@ -13,8 +13,14 @@ const features = [
   {
     icon: <BrainCircuit className="w-8 h-8 text-accent" />,
     title: 'AI Roadmap',
-    description: 'Lộ trình học cá nhân hóa, tối ưu hóa quá trình tiếp thu kiến thức của bạn.',
+    description: 'Lộ trình học cá nhân hóa, tối ưu hóa quá trình tiếp thu kiến thức của bạn với công nghệ AI.',
     href: '/roadmap-ai',
+  },
+  {
+    icon: <BookOpen className="w-8 h-8 text-accent" />,
+    title: 'Khóa Học',
+    description: 'Tham gia các khóa học có cấu trúc, từng bước nắm vững kiến thức triết học Mác – Lênin.',
+    href: '/courses',
   },
   {
     icon: <Puzzle className="w-8 h-8 text-accent" />,
@@ -23,28 +29,22 @@ const features = [
     href: '/quiz',
   },
   {
-    icon: <FileText className="w-8 h-8 text-accent" />,
-    title: 'Blog',
-    description: 'Khám phá các bài viết chuyên sâu, phân tích đa chiều về triết học Mác – Lênin.',
-    href: '/blog',
-  },
-  {
     icon: <ScrollText className="w-8 h-8 text-accent" />,
     title: 'Timeline',
     description: 'Theo dõi dòng chảy lịch sử của các tư tưởng triết học qua các cột mốc quan trọng.',
     href: '/timeline',
   },
   {
+    icon: <FileText className="w-8 h-8 text-accent" />,
+    title: 'Blog',
+    description: 'Khám phá các bài viết chuyên sâu, phân tích đa chiều về triết học Mác – Lênin.',
+    href: '/blog',
+  },
+  {
     icon: <Bot className="w-8 h-8 text-accent" />,
     title: 'Vua Triết AI',
     description: 'Trò chuyện và giải đáp thắc mắc mọi lúc, mọi nơi với trợ lý AI chuyên nghiệp.',
     href: '/chatbot',
-  },
-  {
-    icon: <LayoutDashboard className="w-8 h-8 text-accent" />,
-    title: 'Dashboard Analytics',
-    description: 'Theo dõi tiến độ học tập của bạn qua các biểu đồ và số liệu trực quan.',
-    href: '#',
   },
 ];
 
@@ -59,8 +59,8 @@ export function Features() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <Link key={index} href={feature.href} className="block group">
+          {features.map((feature) => (
+            <Link key={feature.href} href={feature.href} className="block group">
                 <Card className="h-full bg-card/80 backdrop-blur-sm border-border/50 shadow-lg transition-all duration-500 transform group-hover:-translate-y-1 group-hover:shadow-2xl relative overflow-hidden">
                 <span aria-hidden className="pointer-events-none absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-amber-400/40 via-yellow-300/30 to-amber-500/40 blur"></span>
                 <CardHeader className="relative">

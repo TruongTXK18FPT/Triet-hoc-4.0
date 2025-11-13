@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ChapterList } from "@/components/courses/ChapterList";
 import { ProgressBar } from "@/components/courses/ProgressBar";
+import { CourseCompletionBadge } from "@/components/courses/CourseCompletionBadge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -139,10 +140,10 @@ export default function CourseDetailPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Course Header */}
-              <Card className="bg-card/80 backdrop-blur-sm shadow-lg">
+              <Card className="bg-card/80 backdrop-blur-sm shadow-lg border-2 border-amber-200 vintage-card">
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className="aspect-video w-32 bg-gradient-to-br from-[#44392d] to-[#5a4a3a] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="aspect-video w-32 bg-gradient-to-br from-amber-700 via-orange-600 to-amber-800 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
                       {course.coverUrl ? (
                         <img
                           src={course.coverUrl}
@@ -150,35 +151,37 @@ export default function CourseDetailPage() {
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
-                        <BookOpen className="h-8 w-8 text-white/60" />
+                        <BookOpen className="h-8 w-8 text-white/80" />
                       )}
                     </div>
                     <div className="flex-1">
-                      <CardTitle className="font-headline text-2xl text-primary mb-2">
+                      <CardTitle className="font-headline text-2xl text-amber-900 mb-2">
                         {course.title}
                       </CardTitle>
-                      <CardDescription className="text-base">
+                      <CardDescription className="text-base text-slate-700">
                         {course.description || "Không có mô tả"}
                       </CardDescription>
                       <div className="flex items-center gap-4 mt-4">
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="border-amber-600 text-amber-700 vintage-badge">
                           <BookOpen className="w-4 h-4 mr-1" />
                           {course._count.chapters} chương
                         </Badge>
-                        {isCompleted && (
-                          <Badge className="bg-green-600">
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Hoàn thành
-                          </Badge>
-                        )}
-                        {isStarted && !isCompleted && (
-                          <Badge variant="secondary">Đang học</Badge>
-                        )}
                       </div>
                     </div>
                   </div>
                 </CardHeader>
               </Card>
+
+              {/* Completion Status Badge */}
+              {userProgress && (
+                <CourseCompletionBadge
+                  completedPercent={userProgress.completedPercent}
+                  totalChapters={userProgress.totalChapters}
+                  completedChapters={userProgress.completedChapters?.length || 0}
+                  size="lg"
+                  showDetails={true}
+                />
+              )}
 
               {/* Progress Bar */}
               {userProgress && (

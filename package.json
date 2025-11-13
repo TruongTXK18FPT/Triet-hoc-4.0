@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed-users": "tsx prisma/seed-users.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

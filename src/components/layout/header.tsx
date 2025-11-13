@@ -18,6 +18,7 @@ import {
   Star,
   Target,
   BookOpen,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -37,6 +38,7 @@ const navLinks = [
   { name: "Trang chủ", href: "/", icon: Home },
   { name: "Khóa học", href: "/courses", icon: BookOpen },
   { name: "Lộ trình AI", href: "/roadmap-ai", icon: Sparkles, highlight: true },
+  { name: "Thi đua", href: "/gamification", icon: Trophy },
   { name: "Dòng thời gian", href: "/timeline", icon: CalendarClock },
   { name: "Trắc nghiệm", href: "/quiz", icon: ListChecks },
   { name: "Blog", href: "/blog", icon: Newspaper },
@@ -57,7 +59,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#44392d] shadow-lg">
+    <header className="sticky top-0 z-50 w-full bg-[#44392d] shadow-lg" suppressHydrationWarning={true}>
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">

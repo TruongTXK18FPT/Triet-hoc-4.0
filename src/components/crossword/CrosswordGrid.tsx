@@ -124,14 +124,14 @@ export function CrosswordGrid({
         // Answered cells - không phải keyword
         "bg-green-100 border-green-400 text-green-800":
           isAnswered && !isKeyword && isAnswerRow,
-        
+
         // Not answered yet
         "bg-white border-gray-300 text-gray-800 hover:bg-gray-50":
           !isAnswered && isAnswerRow,
 
         // Selected question highlight
         "ring-2 ring-[#44392d] scale-105": isSelected && isAnswerRow,
-        
+
         // Empty spacing rows
         "opacity-0 pointer-events-none": !isAnswerRow,
       }
@@ -161,7 +161,11 @@ export function CrosswordGrid({
             if (!isAnswerRow && row.every((cell) => !cell)) {
               // Spacing row - chỉ hiển thị visual guide cho cột keyword
               return (
-                <div key={rowIndex} className="flex gap-1" style={{ height: '12px' }}>
+                <div
+                  key={rowIndex}
+                  className="flex gap-1"
+                  style={{ height: "12px" }}
+                >
                   <div className="w-8"></div>
                   {row.map((_, colIndex) => (
                     <div

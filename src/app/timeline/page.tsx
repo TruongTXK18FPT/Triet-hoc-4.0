@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import {
@@ -11,7 +11,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { timelineEvents, type TimelineEvent } from "@/lib/timeline-events";
+import type { TimelineEvent } from "@/lib/timeline-events";
 import { ScrollText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,12 +25,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { explainConcept } from "@/ai/flows/explain-philosophical-concepts";
 import type { ExplainConceptOutput } from "@/ai/flows/explain-philosophical-concepts";
 
-const years = timelineEvents.map((e) => parseInt(e.year));
-const minYear = Math.min(...years);
-const maxYear = Math.max(...years);
-
 export default function TimelinePage() {
-  const [range, setRange] = useState<[number, number]>([minYear, maxYear]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<[number, number]>([1776, 2025]);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
     null
@@ -40,10 +38,39 @@ export default function TimelinePage() {
   );
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    async function fetchTimelineEvents() {
+      try {
+        const res = await fetch("/api/timeline");
+        if (res.ok) {
+          const events = await res.json();
+          setTimelineEvents(events);
+          
+          // Tính minYear và maxYear từ events
+          if (events.length > 0) {
+            const years = events.map((e: TimelineEvent) => Number.parseInt(e.year));
+            const min = Math.min(...years);
+            const max = Math.max(...years);
+            setRange([min, max]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching timeline events:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTimelineEvents();
+  }, []);
+
   const filteredEvents = timelineEvents.filter((event) => {
-    const eventYear = parseInt(event.year);
+    const eventYear = Number.parseInt(event.year);
     return eventYear >= range[0] && eventYear <= range[1];
   });
+
+  const years = timelineEvents.map((e) => Number.parseInt(e.year));
+  const minYear = years.length > 0 ? Math.min(...years) : 1776;
+  const maxYear = years.length > 0 ? Math.max(...years) : 2025;
 
   const handleRangeChange = (newRange: [number, number]) => {
     setRange(newRange);
@@ -85,6 +112,15 @@ export default function TimelinePage() {
             </p>
           </div>
 
+          {loading && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin text-amber-600" />
+              <p className="ml-4 text-foreground/70">Đang tải dữ liệu...</p>
+            </div>
+          )}
+
+          {!loading && (
+            <>
           <Card className="bg-white/90 backdrop-blur-xl shadow-2xl border-2 border-amber-200/50 mb-12">
             <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-orange-50">
               <CardTitle className="font-headline text-xl text-amber-800 flex items-center gap-2">
@@ -270,6 +306,8 @@ export default function TimelinePage() {
               </div>
             )}
           </div>
+            </>
+          )}
         </div>
       </main>
       <Footer />
@@ -288,13 +326,38 @@ export default function TimelinePage() {
                 <p className="ml-4 text-foreground/70">AI đang tư duy...</p>
               </div>
             ) : (
-              <div
-                className="text-foreground/90 whitespace-pre-wrap leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    explanation?.explanation.replaceAll("\n", "<br />") ?? "",
-                }}
-              />
+              <div className="text-foreground/90 leading-relaxed space-y-4">
+                {explanation?.explanation.split('\n\n').map((paragraph, idx) => {
+                  // Handle bold text **text**
+                  let formattedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong class="text-amber-800 font-semibold">$1</strong>');
+                  
+                  // Handle bullet points
+                  if (formattedText.trim().startsWith('-')) {
+                    const items = formattedText.split('\n').filter(line => line.trim());
+                    return (
+                      <ul key={idx} className="list-disc pl-6 space-y-2 marker:text-amber-600">
+                        {items.map((item, i) => (
+                          <li key={i} dangerouslySetInnerHTML={{ __html: item.replace(/^-\s*/, '') }} />
+                        ))}
+                      </ul>
+                    );
+                  }
+                  
+                  // Handle headings (lines ending with :)
+                  if (formattedText.trim().endsWith(':')) {
+                    return (
+                      <h3 key={idx} className="text-lg font-bold text-amber-900 mt-6 mb-2">
+                        {formattedText.replace(':', '')}
+                      </h3>
+                    );
+                  }
+                  
+                  // Regular paragraph
+                  return (
+                    <p key={idx} className="text-base" dangerouslySetInnerHTML={{ __html: formattedText }} />
+                  );
+                })}
+              </div>
             )}
           </ScrollArea>
         </DialogContent>

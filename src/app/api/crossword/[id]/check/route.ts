@@ -29,10 +29,10 @@ const checkKeywordSchema = z.object({
 // POST: Kiểm tra keyword người dùng nhập
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const parsed = checkKeywordSchema.safeParse(body);
 

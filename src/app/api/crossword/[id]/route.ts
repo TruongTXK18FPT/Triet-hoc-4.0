@@ -57,10 +57,10 @@ const updateGameSchema = z.object({
 // GET: Lấy chi tiết game
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const game = await prisma.crosswordGame.findUnique({
       where: { id },
@@ -107,7 +107,7 @@ export async function GET(
 // PUT: Cập nhật game (admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -123,7 +123,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const parsed = updateGameSchema.safeParse(body);
 
@@ -207,7 +207,7 @@ export async function PUT(
 // DELETE: Xóa game (admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -223,7 +223,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const game = await prisma.crosswordGame.findUnique({
       where: { id },

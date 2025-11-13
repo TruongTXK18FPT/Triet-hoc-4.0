@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
   TrendingUp,
   User,
   Eye,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import {
@@ -32,8 +34,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { RoadmapFlow } from "@/components/roadmap/RoadmapFlow";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Link from "next/link";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -49,7 +53,12 @@ export default function ProfilePage() {
   }>({ quizzes: 0, roadmaps: 0, reviews: 0, posts: 0, comments: 0 });
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
   const [selectedRoadmap, setSelectedRoadmap] = useState<any | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -80,6 +89,34 @@ export default function ProfilePage() {
               (r: any) => r.user.email === session?.user?.email
             ) || [];
           setReviews(userReviews);
+        }
+
+        // Fetch user posts
+        const postsRes = await fetch("/api/blog");
+        if (postsRes.ok) {
+          const postsData = await postsRes.json();
+          const userPosts = postsData.filter(
+            (p: any) => p.author?.email === session?.user?.email
+          );
+          setPosts(userPosts);
+        }
+
+        // Fetch user comments - fetch from all posts
+        const commentsRes = await fetch('/api/blog');
+        if (commentsRes.ok) {
+          const allPostsData = await commentsRes.json();
+          const allComments = [];
+          for (const post of allPostsData) {
+            const postCommentsRes = await fetch(`/api/blog/${post.slug}/comments`);
+            if (postCommentsRes.ok) {
+              const commentsData = await postCommentsRes.json();
+              const userComments = commentsData.comments?.filter(
+                (c: any) => c.author.email === session?.user?.email
+              ) || [];
+              allComments.push(...userComments.map((c: any) => ({ ...c, postSlug: post.slug, postTitle: post.title })));
+            }
+          }
+          setComments(allComments);
         }
       });
     }
@@ -117,10 +154,93 @@ export default function ProfilePage() {
         </div>
         <div className="container mx-auto px-4 h-full flex items-end pb-8 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-3xl font-bold shadow-xl">
-              {session?.user?.name?.charAt(0)?.toUpperCase() || (
-                <User className="h-10 w-10" />
-              )}
+            <div className="relative group">
+              <Avatar className="h-20 w-20 ring-4 ring-background shadow-xl cursor-pointer">
+                {avatarPreview ? (
+                  <AvatarImage src={avatarPreview} alt="Avatar preview" />
+                ) : session?.user?.image ? (
+                  <AvatarImage src={session.user.image} alt={session.user.name || 'Avatar'} />
+                ) : null}
+                <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-3xl font-bold">
+                  {session?.user?.name?.charAt(0)?.toUpperCase() || session?.user?.email?.charAt(0)?.toUpperCase() || (
+                    <User className="h-10 w-10" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute bottom-0 right-0 rounded-full h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) {
+                    setAvatarPreview(null);
+                    return;
+                  }
+                  
+                  // Show preview immediately
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setAvatarPreview(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                  
+                  setUploadingAvatar(true);
+                  try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const res = await fetch('/api/profile/avatar', {
+                      method: 'POST',
+                      body: formData,
+                    });
+                    
+                    const responseData = await res.json();
+                    
+                    if (res.ok) {
+                      // Clear preview after successful upload
+                      setAvatarPreview(null);
+                      // Reload page to show updated avatar
+                      // Session will be refreshed on reload and JWT callback will fetch new image from database
+                      globalThis.location.reload();
+                    } else {
+                      // Clear preview on error
+                      setAvatarPreview(null);
+                      const errorMessage = responseData?.error || 'Upload thất bại';
+                      alert(errorMessage);
+                      // Reset file input
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }
+                  } catch (error: any) {
+                    // Clear preview on error
+                    setAvatarPreview(null);
+                    console.error('Upload error:', error);
+                    alert(`Upload thất bại: ${error?.message || 'Lỗi không xác định'}`);
+                    // Reset file input
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  } finally {
+                    setUploadingAvatar(false);
+                  }
+                }}
+              />
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-extrabold text-amber-800 tracking-tight">
@@ -303,6 +423,106 @@ export default function ProfilePage() {
                           </div>
                           <Eye className="h-5 w-5 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* User Posts */}
+            {posts.length > 0 && (
+              <Card className="bg-white/95 backdrop-blur border-slate-200 shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-blue-50">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-slate-700" />
+                    Bài viết của tôi ({posts.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    {posts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="p-4 rounded-lg border border-slate-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-blue-900 mb-2">
+                              <Link href={`/blog/${post.slug}`} className="hover:text-blue-700">
+                                {post.title}
+                              </Link>
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {new Date(post.publishedAt || post.createdAt).toLocaleDateString('vi-VN')}
+                              {post._count?.comments !== undefined && (
+                                <> • {post._count.comments} bình luận</>
+                              )}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              if (confirm('Bạn có chắc muốn xóa bài viết này?')) {
+                                try {
+                                  const res = await fetch(`/api/blog/${post.slug}`, {
+                                    method: 'DELETE',
+                                  });
+                                  if (res.ok) {
+                                    setPosts(posts.filter((p) => p.id !== post.id));
+                                    toast({
+                                      title: 'Thành công',
+                                      description: 'Đã xóa bài viết',
+                                    });
+                                  } else {
+                                    toast({
+                                      title: 'Lỗi',
+                                      description: 'Không thể xóa bài viết',
+                                      variant: 'destructive',
+                                    });
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: 'Lỗi',
+                                    description: 'Không thể xóa bài viết',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }
+                            }}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* User Comments */}
+            {comments.length > 0 && (
+              <Card className="bg-white/95 backdrop-blur border-slate-200 shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-blue-50">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-slate-700" />
+                    Bình luận của tôi ({comments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    {comments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="p-4 rounded-lg border border-slate-200 bg-gradient-to-br from-rose-50/50 to-pink-50/50"
+                      >
+                        <p className="text-sm text-slate-700 mb-2">{comment.content}</p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
+                        </p>
                       </div>
                     ))}
                   </div>

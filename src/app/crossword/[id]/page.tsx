@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, RefreshCw } from "lucide-react";
+import { ArrowLeft, Trophy, RefreshCw, Volume2, VolumeX } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CrosswordGrid } from "@/components/crossword/CrosswordGrid";
 import { QuestionPanel } from "@/components/crossword/QuestionPanel";
@@ -52,6 +52,128 @@ export default function PlayCrosswordGame() {
     number | undefined
   >();
   const [isCheckingKeyword, setIsCheckingKeyword] = useState(false);
+
+  // Sound state
+  const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const backgroundSoundRef = useRef<HTMLAudioElement | null>(null);
+  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
+  const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Helper function to play sound
+  const playSound = (soundRef: React.RefObject<HTMLAudioElement>) => {
+    if (!soundRef.current || isSoundMuted) return;
+
+    soundRef.current.currentTime = 0;
+    soundRef.current.play().catch(() => {
+      // Silently fail - audio play may be blocked by browser autoplay policy
+    });
+  };
+
+  // Initialize sound effects
+  useEffect(() => {
+    if (globalThis.window !== undefined) {
+      // Background sound
+      const bgSound = new Audio();
+      bgSound.src = "/assets/background-sound.mp3";
+      bgSound.loop = true;
+      bgSound.volume = 0.3;
+      bgSound.preload = "auto";
+      backgroundSoundRef.current = bgSound;
+
+      // Correct sound
+      const corSound = new Audio();
+      corSound.src = "/assets/correct-sound.mp3";
+      corSound.volume = 0.5;
+      corSound.preload = "auto";
+      correctSoundRef.current = corSound;
+
+      // Wrong sound
+      const wrSound = new Audio();
+      wrSound.src = "/assets/wrong-sound.mp3";
+      wrSound.volume = 0.5;
+      wrSound.preload = "auto";
+      wrongSoundRef.current = wrSound;
+
+      // Handle errors with detailed info
+      const handleError = (sound: string) => (e: Event) => {
+        const audio = e.target as HTMLAudioElement;
+        const error = audio.error;
+        if (error) {
+          let errorMsg = `${sound} sound error: `;
+          switch (error.code) {
+            case error.MEDIA_ERR_ABORTED:
+              errorMsg += "Media loading aborted";
+              break;
+            case error.MEDIA_ERR_NETWORK:
+              errorMsg += "Network error";
+              break;
+            case error.MEDIA_ERR_DECODE:
+              errorMsg += "Decode error";
+              break;
+            case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+              errorMsg += "Format not supported";
+              break;
+            default:
+              errorMsg += `Unknown error (code: ${error.code})`;
+          }
+          console.warn(errorMsg);
+        } else {
+          console.warn(`${sound} sound error: Unable to load audio file`);
+        }
+      };
+
+      bgSound.addEventListener("error", handleError("Background"));
+      corSound.addEventListener("error", handleError("Correct"));
+      wrSound.addEventListener("error", handleError("Wrong"));
+
+      // Try to load audio files (load() doesn't return a promise)
+      try {
+        bgSound.load();
+        corSound.load();
+        wrSound.load();
+      } catch (error) {
+        // Ignore load errors - they will be caught by error event listeners
+      }
+
+      // Start background sound after user interaction
+      const handleFirstInteraction = () => {
+        if (!isSoundMuted && backgroundSoundRef.current) {
+          backgroundSoundRef.current.play().catch((error) => {
+            console.log("Background sound play failed:", error);
+          });
+        }
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("touchstart", handleFirstInteraction);
+      };
+
+      document.addEventListener("click", handleFirstInteraction);
+      document.addEventListener("touchstart", handleFirstInteraction);
+
+      return () => {
+        bgSound.pause();
+        corSound.pause();
+        wrSound.pause();
+        bgSound.src = "";
+        corSound.src = "";
+        wrSound.src = "";
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("touchstart", handleFirstInteraction);
+      };
+    }
+  }, []);
+
+  // Handle sound mute toggle
+  useEffect(() => {
+    if (backgroundSoundRef.current) {
+      if (isSoundMuted) {
+        backgroundSoundRef.current.pause();
+      } else {
+        backgroundSoundRef.current.play().catch((error) => {
+          console.log("Background sound play failed:", error);
+        });
+      }
+    }
+  }, [isSoundMuted]);
 
   useEffect(() => {
     // Kiểm tra quyền admin
@@ -112,8 +234,11 @@ export default function PlayCrosswordGame() {
         ...revealedLetters,
         question.keywordCharIndex,
       ]);
-      
+
       setRevealedLetters(newRevealedLetters);
+
+      // Play correct sound
+      playSound(correctSoundRef);
 
       toast({
         title: "Chính xác!",
@@ -128,6 +253,9 @@ export default function PlayCrosswordGame() {
       }
     } else {
       setAnsweredQuestions((prev) => new Set([...prev, questionOrder]));
+
+      // Play wrong sound
+      playSound(wrongSoundRef);
 
       toast({
         title: "Sai rồi!",
@@ -246,6 +374,19 @@ export default function PlayCrosswordGame() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <Button
+                onClick={() => setIsSoundMuted(!isSoundMuted)}
+                variant="outline"
+                className="text-white border-white/30 hover:bg-white/10"
+                title={isSoundMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+              >
+                {isSoundMuted ? (
+                  <VolumeX className="h-4 w-4 mr-2" />
+                ) : (
+                  <Volume2 className="h-4 w-4 mr-2" />
+                )}
+                {isSoundMuted ? "Bật âm" : "Tắt âm"}
+              </Button>
               <Button
                 onClick={resetGame}
                 variant="outline"
