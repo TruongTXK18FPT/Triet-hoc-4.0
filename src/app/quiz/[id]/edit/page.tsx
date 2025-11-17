@@ -86,7 +86,7 @@ export default function EditQuizPage() {
       isPublic: true,
       topicForAI: '',
       questions: [
-        { text: '', options: [{ text: '' }, { text: '' }], correctOptions: [] },
+        { text: '', options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }], correctOptions: [] },
       ],
     },
   });
@@ -503,17 +503,19 @@ export default function EditQuizPage() {
                                 <Label className="font-semibold text-base">Các lựa chọn & Đáp án đúng</Label>
                                 <FormDescription>Chọn một hoặc nhiều đáp án đúng bằng cách click vào checkbox</FormDescription>
 
-                                {(!question.correctOptions || question.correctOptions.length === 0) && (
-                                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/50">
-                                    <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
-                                    <p className="text-sm text-destructive">Câu hỏi này chưa có đáp án đúng nào được chọn</p>
-                                  </div>
-                                )}
-
                                 <FormField
                                     control={form.control}
                                     name={`questions.${qIndex}.correctOptions`}
                                     render={({ field }) => (
+                                        <>
+                                        {/* Warning if no correct answer selected */}
+                                        {(!field.value || field.value.length === 0) && (
+                                          <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/50">
+                                            <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                                            <p className="text-sm text-destructive">Vui lòng chọn ít nhất một đáp án đúng</p>
+                                          </div>
+                                        )}
+                                        
                                         <div className="space-y-3">
                                             {question.options.map((option, oIndex) => (
                                                 <div key={oIndex} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border hover:border-primary/50 transition-colors">
@@ -560,6 +562,7 @@ export default function EditQuizPage() {
                                                 </div>
                                             ))}
                                         </div>
+                                      </>
                                     )}
                                 />
                                 {form.formState.errors.questions?.[qIndex]?.correctOptions && (
@@ -596,7 +599,7 @@ export default function EditQuizPage() {
                             variant="secondary"
                             size="lg"
                             className="w-full"
-                            onClick={() => append({ text: '', options: [{ text: '' }, { text: '' }], correctOptions: [] })}
+                            onClick={() => append({ text: '', options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }], correctOptions: [] })}
                         >
                             <Plus className="mr-2 h-5 w-5" /> Thêm câu hỏi mới
                         </Button>

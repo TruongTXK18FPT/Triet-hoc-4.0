@@ -369,7 +369,7 @@ export default function QuizPage() {
               </>
             ) : (
               <RadioGroup
-                value={typeof selectedOption === 'number' ? selectedOption.toString() : undefined}
+                value={selectedOption !== undefined ? selectedOption.toString() : undefined}
                 onValueChange={(value) => handleOptionChange(value, false)}
               >
                 <div className="space-y-4">
@@ -378,7 +378,7 @@ export default function QuizPage() {
                       key={index}
                       className={cn(
                         "flex items-start p-5 rounded-xl border-2 transition-all cursor-pointer",
-                        selectedOption === index
+                        selectedOption !== undefined && selectedOption === index
                           ? 'bg-primary/10 border-primary shadow-md'
                           : 'bg-background/50 hover:bg-accent/10 hover:border-primary/30'
                       )}
